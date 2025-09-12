@@ -48,6 +48,20 @@ Komponen sidebar sekarang hanya berisi tag <aside>.
                     </svg>
                     <span x-show="open" class="whitespace-nowrap">Kelola User</span>
                 </a>
+
+                {{-- === BAGIAN BARU DIMULAI DI SINI === --}}
+                <a href="{{ route('admin.penginapan.index') }}"
+                    class="flex items-center px-6 py-3 space-x-4 hover:bg-gray-700 {{ request()->routeIs('admin.penginapan.*') ? 'bg-gray-700' : '' }}"
+                    title="Kelola Artikel Penginapan">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                    </svg>
+                    <span x-show="open" class="whitespace-nowrap">Kelola Penginapan</span>
+                </a>
+                {{-- === BAGIAN BARU BERAKHIR DI SINI === --}}
+
             @else
                 {{-- Menu untuk Member atau role lainnya --}}
                 <a href="{{ route('dashboard') }}"
