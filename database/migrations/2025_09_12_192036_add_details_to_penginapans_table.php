@@ -15,9 +15,6 @@ return new class extends Migration
             // Tambahkan relasi ke user (author) setelah 'id'
             $table->foreignId('user_id')->after('id')->constrained('users')->onDelete('cascade');
 
-            // Tambahkan slug setelah 'nama'
-            $table->string('slug')->unique()->after('nama');
-
             // Hapus harga_per_malam yang kurang fleksibel
             $table->dropColumn('harga_per_malam');
 
