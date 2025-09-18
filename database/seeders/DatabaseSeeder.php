@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB; // <-- Import DB
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,30 +17,16 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         // Hapus semua data lama dari tabel users
+        // Ini akan dipindahkan ke seeder yang relevan jika diperlukan
         User::truncate();
 
         // Aktifkan kembali pengecekan foreign key
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
 
-        // === BAGIAN UNTUK MEMBUAT DATA BARU ===
-
-        // 1. Buat user admin
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'role' => 'admin', // Pastikan Anda punya kolom 'role' di tabel users
-        ]);
-
-        // 2. Buat user member biasa
-        User::factory()->create([
-            'name' => 'Test Member',
-            'email' => 'member@example.com',
-            'role' => 'member', // Sesuaikan 'member' jika nama role Anda berbeda
-        ]);
-
-        // 3. Panggil seeder lain yang kita butuhkan
+        // Panggil semua seeder yang kita butuhkan di sini
         $this->call([
+            UserSeeder::class,      // <-- Panggil UserSeeder yang baru
             FasilitasSeeder::class,
             // Anda bisa tambahkan seeder lain di sini nanti
         ]);

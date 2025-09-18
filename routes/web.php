@@ -59,7 +59,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Route untuk kelola penginapan (CRUD di Admin Panel)
     // Sekarang tidak ada lagi konflik dengan route frontend
-    Route::resource('penginapan', PenginapanController::class);
+    Route::resource('penginapan', PenginapanController::class)->except(['show']);
 
 });
 
