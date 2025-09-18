@@ -16,7 +16,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.penginapan.update', $penginapan->id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.penginapan.update', $penginapan) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT') {{-- Method spoofing untuk update --}}
                     
