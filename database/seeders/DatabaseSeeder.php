@@ -29,6 +29,12 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,      // <-- Panggil UserSeeder yang baru
             FasilitasSeeder::class,
             // Anda bisa tambahkan seeder lain di sini nanti
+<<<<<<< HEAD
+   ]);
+}
+}
+=======
         ]);
     }
 }
+>>>>>>> d2ab5f50ab123052596e8651fd016440660df281

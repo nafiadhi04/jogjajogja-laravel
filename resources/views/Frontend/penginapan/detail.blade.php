@@ -23,7 +23,7 @@
                         {{-- Galeri Gambar --}}
                         {{-- NOTE: Carousel ini membutuhkan Alpine.js untuk berfungsi penuh. --}}
                         {{-- Jika Alpine.js tidak terpasang, ini akan menampilkan gambar statis. --}}
-                        <div x-data="{ activeSlide: 0, slides: {{ $penginapan->gambar->count() + 1 }} }"
+                        <div x-data="{ activeSlide: 0, slides: {{ $penginapan->gambar ? $penginapan->gambar->count() + 1 : 1 }} }"
                             class="relative mt-6 overflow-hidden rounded-lg shadow-md">
                             {{-- Gambar --}}
                             <div class="flex transition-transform duration-500 ease-in-out"
