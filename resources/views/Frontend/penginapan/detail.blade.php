@@ -1,5 +1,24 @@
 <x-guest-layout>
-    {{-- Container utama dari layout --}}
+    {{-- Menitipkan style khusus untuk halaman ini ke layout utama --}}
+    @push('styles')
+        <style>
+            /* Aturan CSS ini akan memaksa perataan teks dari Quill
+                   untuk diterapkan, bahkan jika bertentangan dengan style 'prose'.
+                */
+            .prose .ql-align-center {
+                text-align: center;
+            }
+
+            .prose .ql-align-right {
+                text-align: right;
+            }
+
+            .prose .ql-align-justify {
+                text-align: justify;
+            }
+        </style>
+    @endpush
+
     <div class="py-12 bg-gray-50">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
@@ -20,23 +39,21 @@
                             </div>
                         </div>
 
-                        {{-- Galeri Gambar --}}
-                        {{-- NOTE: Carousel ini membutuhkan Alpine.js untuk berfungsi penuh. --}}
-                        {{-- Jika Alpine.js tidak terpasang, ini akan menampilkan gambar statis. --}}
-                        <div x-data="{ activeSlide: 0, slides: {{ $penginapan->gambar ? $penginapan->gambar->count() + 1 : 1 }} }"
+                        {{-- Galeri Gambar (Carousel) --}}
+                        <div x-data="{ activeSlide: 0, slides: {{ $penginapan->gambar->count() + 1 }} }"
                             class="relative mt-6 overflow-hidden rounded-lg shadow-md">
-                            {{-- Gambar --}}
+                            {{-- Kontainer Gambar --}}
                             <div class="flex transition-transform duration-500 ease-in-out"
                                 :style="{ transform: `translateX(-${activeSlide * 100}%)` }">
                                 {{-- Thumbnail sebagai slide pertama --}}
                                 <div class="flex-shrink-0 w-full">
-                                    <img src="{{ asset('storage/thumbnails_penginapan/' . $penginapan->thumbnail) }}"
+                                    <img src="{{ asset('storage/' . $penginapan->thumbnail) }}"
                                         alt="{{ $penginapan->nama }}" class="object-cover w-full h-96">
                                 </div>
                                 {{-- Loop untuk gambar galeri --}}
                                 @foreach($penginapan->gambar as $gambar)
                                     <div class="flex-shrink-0 w-full">
-                                        <img src="{{ asset('storage/galeri_penginapan/' . $gambar->path_gambar) }}"
+                                        <img src="{{ asset('storage/' . $gambar->path_gambar) }}"
                                             alt="Galeri {{ $penginapan->nama }}" class="object-cover w-full h-96">
                                     </div>
                                 @endforeach
@@ -61,9 +78,13 @@
                         </div>
 
                         {{-- Deskripsi --}}
-                        <div class="mt-8 prose max-w-none prose-indigo">
-                            <h3 class="text-2xl font-bold text-gray-800">Deskripsi</h3>
-                            {!! $penginapan->deskripsi !!}
+                        <div class="mt-8">
+                            <h3 class="mb-3 text-2xl font-bold text-gray-800">Deskripsi</h3>
+                            {{-- Kelas 'prose' dari Tailwind Typography akan otomatis menata styling --}}
+                            {{-- Penggunaan {!! !!} akan me-render tag HTML dengan benar --}}
+                            <div class="prose max-w-none prose-indigo">
+                                {!! $penginapan->deskripsi !!}
+                            </div>
                         </div>
 
                         {{-- Peta Lokasi --}}
@@ -77,7 +98,7 @@
                     </div>
                 </div>
 
-                {{-- Sidebar (Konten Kanan) --}}
+                {{-- Sidebar Informasi (Konten Kanan) --}}
                 <div class="lg:col-span-1">
                     <div class="sticky top-8">
                         <div class="p-6 bg-white rounded-lg shadow-lg">

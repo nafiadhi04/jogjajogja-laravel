@@ -6,64 +6,73 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Fasilitas;
 use App\Models\Penginapan;
+use App\Models\GambarPenginapan;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule; // <-- Import Rule
 
 class PenginapanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // ... (method index, create, edit tidak berubah)
     public function index()
     {
         $all_penginapan = Penginapan::with('author')->latest()->paginate(10);
         return view('admin.penginapan.index', compact('all_penginapan'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $fasilitas = Fasilitas::all();
         return view('admin.penginapan.create', compact('fasilitas'));
     }
 
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        // ... (Kode store Anda yang sudah benar ada di sini)
+        // ==========================================================
+        // VALIDASI DIPERBARUI DI SINI
+        // ==========================================================
         $validated = $request->validate([
-            'nama' => 'required|string|max:255|unique:penginapans,nama',
-            'deskripsi' => 'required|string',
-            'lokasi' => 'nullable|url',
-            'harga' => 'required|integer',
-            'periode_harga' => 'required|string',
-            'tipe' => 'required|string|max:100',
-            'kota' => 'required|string|max:100',
-            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'fasilitas' => 'nullable|array',
-            'fasilitas.*' => 'exists:fasilitas,id',
-            'gambar' => 'nullable|array',
-            'gambar.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'nama' => ['required', 'string', 'max:100'], // Batasan 100 karakter
+            'deskripsi' => ['required', 'string', 'max:5000'], // Batasan 5000 karakter
+            'lokasi' => ['nullable', 'url'],
+            'harga' => ['required', 'integer', 'min:0'], // Memastikan hanya angka integer positif
+            'periode_harga' => ['required', 'string'],
+            // Memastikan tipe adalah salah satu dari opsi yang valid
+            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel'])],
+            // Memastikan kota adalah salah satu dari opsi yang valid
+            'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+            'thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
+            'fasilitas' => ['nullable', 'array'],
+            'fasilitas.*' => ['exists:fasilitas,id'],
+            'gambar' => ['nullable', 'array'],
+            'gambar.*' => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
         ]);
 
-        $thumbnailPath = $request->file('thumbnail')->store('public/thumbnails_penginapan');
+        $slug = Str::slug($validated['nama']);
+        $originalSlug = $slug;
+        $count = 1;
+        while (Penginapan::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $count++;
+        }   
+
+        $thumbnailPath = $request->file('thumbnail')->store('thumbnails_penginapan', 'public');
 
         $penginapan = Penginapan::create([
             'user_id' => Auth::id(),
             'nama' => $validated['nama'],
-            'slug' => Str::slug($validated['nama']),
+            'slug' => $slug,
             'deskripsi' => $validated['deskripsi'],
             'lokasi' => $validated['lokasi'],
             'harga' => $validated['harga'],
             'periode_harga' => $validated['periode_harga'],
             'tipe' => $validated['tipe'],
             'kota' => $validated['kota'],
-            'thumbnail' => basename($thumbnailPath),
+            'thumbnail' => $thumbnailPath,
         ]);
 
         if ($request->has('fasilitas')) {
@@ -72,9 +81,9 @@ class PenginapanController extends Controller
 
         if ($request->hasFile('gambar')) {
             foreach ($request->file('gambar') as $file) {
-                $gambarPath = $file->store('public/galeri_penginapan');
+                $gambarPath = $file->store('galeri_penginapan', 'public');
                 $penginapan->gambar()->create([
-                    'path_gambar' => basename($gambarPath),
+                    'path_gambar' => $gambarPath,
                 ]);
             }
         }
@@ -83,18 +92,12 @@ class PenginapanController extends Controller
             ->with('success', 'Artikel penginapan berhasil ditambahkan!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Penginapan $penginapan)
     {
         $fasilitas = Fasilitas::all();
         return view('admin.penginapan.edit', compact('penginapan', 'fasilitas'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Penginapan $penginapan)
     {
         $validated = $request->validate([
@@ -105,11 +108,11 @@ class PenginapanController extends Controller
             'periode_harga' => 'required|string',
             'tipe' => 'required|string|max:100',
             'kota' => 'required|string|max:100',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20480',
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'exists:fasilitas,id',
             'gambar' => 'nullable|array',
-            'gambar.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'gambar.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:20480',
         ]);
 
         $penginapan->update([
@@ -124,18 +127,27 @@ class PenginapanController extends Controller
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            Storage::delete('public/thumbnails_penginapan/' . $penginapan->thumbnail);
-            $thumbnailPath = $request->file('thumbnail')->store('public/thumbnails_penginapan');
-            $penginapan->update(['thumbnail' => basename($thumbnailPath)]);
+            if ($penginapan->thumbnail) {
+                Storage::disk('public')->delete($penginapan->thumbnail);
+            }
+            // Perbaikan juga diterapkan di sini
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails_penginapan', 'public');
+            $penginapan->update(['thumbnail' => $thumbnailPath]);
         }
 
         $penginapan->fasilitas()->sync($request->fasilitas);
 
         if ($request->hasFile('gambar')) {
+            foreach ($penginapan->gambar as $gambar) {
+                Storage::disk('public')->delete($gambar->path_gambar);
+            }
+            $penginapan->gambar()->delete();
+
             foreach ($request->file('gambar') as $file) {
-                $gambarPath = $file->store('public/galeri_penginapan');
+                // Perbaikan juga diterapkan di sini
+                $gambarPath = $file->store('galeri_penginapan', 'public');
                 $penginapan->gambar()->create([
-                    'path_gambar' => basename($gambarPath),
+                    'path_gambar' => $gambarPath,
                 ]);
             }
         }
@@ -144,17 +156,14 @@ class PenginapanController extends Controller
             ->with('success', 'Artikel penginapan berhasil diperbarui!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Penginapan $penginapan)
     {
-        Storage::delete('public/thumbnails_penginapan/' . $penginapan->thumbnail);
-
-        foreach ($penginapan->gambar as $gambar) {
-            Storage::delete('public/galeri_penginapan/' . $gambar->path_gambar);
+        if ($penginapan->thumbnail) {
+            Storage::disk('public')->delete($penginapan->thumbnail);
         }
-
+        foreach ($penginapan->gambar as $gambar) {
+            Storage::disk('public')->delete($gambar->path_gambar);
+        }
         $penginapan->delete();
 
         return redirect()->route('admin.penginapan.index')

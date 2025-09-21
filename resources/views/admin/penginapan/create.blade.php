@@ -1,15 +1,18 @@
 <x-app-layout>
+    @push('styles')
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    @endpush
+
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="p-6 overflow-hidden bg-white rounded-lg shadow-xl">
 
                 <h1 class="mb-6 text-2xl font-bold">Tambah Artikel Penginapan Baru</h1>
 
-                {{-- Menampilkan error validasi jika ada --}}
                 @if ($errors->any())
-                    <div class="mb-4">
-                        <div class="font-medium text-red-600">Whoops! Ada yang salah dengan input Anda.</div>
-                        <ul class="mt-3 text-sm text-red-600 list-disc list-inside">
+                    <div class="p-4 mb-6 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+                        <span class="font-bold">Whoops! Terjadi kesalahan pada input Anda:</span>
+                        <ul class="mt-2 list-disc list-inside">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -25,35 +28,54 @@
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                         <div>
                             <label for="nama" class="block text-sm font-medium text-gray-700">Nama Penginapan</label>
-                            <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required
+                            {{-- Menambahkan maxlength untuk batasan karakter --}}
+                            <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required maxlength="100"
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
                             <label for="tipe" class="block text-sm font-medium text-gray-700">Tipe Penginapan</label>
-                            <input type="text" name="tipe" id="tipe" value="{{ old('tipe') }}"
-                                placeholder="Contoh: Villa, Hotel" required
+                            {{-- Input diubah menjadi select --}}
+                            <select name="tipe" id="tipe" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Pilih Tipe</option>
+                                <option value="Villa" @selected(old('tipe') == 'Villa')>Villa</option>
+                                <option value="Hotel" @selected(old('tipe') == 'Hotel')>Hotel</option>
+                            </select>
                         </div>
                         <div>
-                            <label for="kota" class="block text-sm font-medium text-gray-700">Kota</label>
-                            <input type="text" name="kota" id="kota" value="{{ old('kota') }}"
-                                placeholder="Contoh: Yogyakarta" required
+                            <label for="kota" class="block text-sm font-medium text-gray-700">Lokasi</label>
+                            {{-- Input diubah menjadi select dengan kota di Yogyakarta --}}
+                            <select name="kota" id="kota" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Pilih Kota/Kabupaten</option>
+                                <option value="Yogyakarta" @selected(old('kota') == 'Yogyakarta')>Yogyakarta</option>
+                                <option value="Sleman" @selected(old('kota') == 'Sleman')>Sleman</option>
+                                <option value="Bantul" @selected(old('kota') == 'Bantul')>Bantul</option>
+                                <option value="Gunungkidul" @selected(old('kota') == 'Gunungkidul')>Gunungkidul</option>
+                                <option value="Kulon Progo" @selected(old('kota') == 'Kulon Progo')>Kulon Progo</option>
+                            </select>
                         </div>
                     </div>
 
-                    {{-- Baris 2: Deskripsi --}}
+                    {{-- Deskripsi dengan QuillJS --}}
                     <div>
-                        <label for="deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                        <textarea name="deskripsi" id="deskripsi" rows="5" required
-                            class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('deskripsi') }}</textarea>
+                        <div class="flex items-center justify-between">
+                            <label for="deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                            {{-- Penghitung karakter untuk deskripsi --}}
+                            <span id="char-count" class="text-sm text-gray-500">0 / 5000</span>
+                        </div>
+                        <input type="hidden" name="deskripsi" id="deskripsi-input">
+                        <div id="editor-container" class="mt-1 h-[500px]">{!! old('deskripsi') !!}</div>
                     </div>
+
 
                     {{-- Baris 3: Harga & Periode --}}
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div>
                             <label for="harga" class="block text-sm font-medium text-gray-700">Harga (Rp)</label>
-                            <input type="number" name="harga" id="harga" value="{{ old('harga') }}" required
+                            {{-- Diubah menjadi type="text" dengan validasi JS agar 'e' tidak bisa diinput --}}
+                            <input type="text" name="harga" id="harga" value="{{ old('harga') }}" required
+                                inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
@@ -61,10 +83,10 @@
                                 Harga</label>
                             <select name="periode_harga" id="periode_harga" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="Harian">Harian</option>
-                                <option value="Mingguan">Mingguan</option>
-                                <option value="Bulanan">Bulanan</option>
-                                <option value="Tahunan">Tahunan</option>
+                                <option value="Harian" @selected(old('periode_harga') == 'Harian')>Harian</option>
+                                <option value="Mingguan" @selected(old('periode_harga') == 'Mingguan')>Mingguan</option>
+                                <option value="Bulanan" @selected(old('periode_harga') == 'Bulanan')>Bulanan</option>
+                                <option value="Tahunan" @selected(old('periode_harga') == 'Tahunan')>Tahunan</option>
                             </select>
                         </div>
                     </div>
@@ -91,8 +113,8 @@
 
                     {{-- Lokasi Google Maps --}}
                     <div>
-                        <label for="lokasi" class="block text-sm font-medium text-gray-700">Lokasi (URL Embed Google
-                            Maps)</label>
+                        <label for="lokasi" class="block text-sm font-medium text-gray-700">URL Google Maps
+                            (Opsional)</label>
                         <input type="text" name="lokasi" id="lokasi" value="{{ old('lokasi') }}"
                             class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                             placeholder="https://www.google.com/maps/embed?pb=...">
@@ -116,8 +138,7 @@
                         </div>
                     </div>
 
-                    {{-- Tombol Aksi --}}
-                    <div class="flex items-center justify-end space-x-4">
+                    <div class="flex items-center justify-end pt-5 space-x-4">
                         <a href="{{ route('admin.penginapan.index') }}"
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
                             Batal
@@ -131,4 +152,57 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['link', 'image'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                var deskripsiInput = document.querySelector('#deskripsi-input');
+                var form = document.querySelector('form');
+                var charCount = document.querySelector('#char-count');
+
+                quill.on('text-change', function () {
+                    let text = quill.getText().trim();
+                    let length = text.length;
+
+                    // Update input tersembunyi
+                    deskripsiInput.value = quill.root.innerHTML;
+
+                    // Update penghitung karakter
+                    charCount.textContent = length + ' / 5000';
+                    if (length > 5000) {
+                        charCount.classList.add('text-red-500');
+                    } else {
+                        charCount.classList.remove('text-red-500');
+                    }
+                });
+
+                form.addEventListener('submit', function (e) {
+                    if (quill.root.innerHTML === '<p><br></p>') {
+                        deskripsiInput.value = '';
+                    } else {
+                        deskripsiInput.value = quill.root.innerHTML;
+                    }
+                });
+
+                // Inisialisasi penghitung karakter saat halaman dimuat
+                charCount.textContent = quill.getText().trim().length + ' / 5000';
+            });
+        </script>
+    @endpush
+
 </x-app-layout>

@@ -12,6 +12,8 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased">
@@ -24,10 +26,12 @@
         {{-- Komponen Sidebar --}}
         <x-sidebar :user="$user" />
 
-        {{-- Area Konten Utama --}}
-        <div class="flex flex-col flex-1">
+        {{-- ========================================================== --}}
+        {{-- PERUBAHAN DI SINI: Ditambahkan 'overflow-x-hidden' --}}
+        {{-- ========================================================== --}}
+        <div class="flex flex-col flex-1 overflow-x-hidden">
 
-            {{-- [MODIFIKASI] Header sekarang berisi judul halaman dan dropdown profil --}}
+            {{-- Header --}}
             <header
                 class="flex items-center justify-between p-6 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
@@ -66,7 +70,7 @@
                                 @csrf
 
                                 <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();
-                                                    this.closest('form').submit();">
+                                                        this.closest('form').submit();">
                                     {{ __('Log Out') }}
                                 </x-dropdown-link>
                             </form>
@@ -82,6 +86,9 @@
         </div>
 
     </div>
+
+    @stack('scripts')
+
 </body>
 
 </html>

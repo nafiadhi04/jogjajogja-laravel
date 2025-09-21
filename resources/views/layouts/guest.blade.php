@@ -23,6 +23,12 @@
             margin-bottom: 0;
         }
     </style>
+
+    {{-- ========================================================== --}}
+    {{-- BAGIAN YANG DITAMBAHKAN --}}
+    {{-- Ini akan menjadi tempat untuk memuat CSS dari halaman detail --}}
+    {{-- ========================================================== --}}
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased text-gray-900">
@@ -43,9 +49,6 @@
                             <a href="{{ route('penginapan.list') }}"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">Penginapan</a>
                             {{-- Tambahkan link untuk Wisata di sini nanti --}}
-                            {{-- <a href="#"
-                                class="px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">Wisata</a>
-                            --}}
                         </div>
                     </div>
                     {{-- Tombol Login/Dashboard --}}
@@ -71,6 +74,8 @@
             {{ $slot }}
         </main>
     </div>
+
+    @stack('scripts')
 </body>
 
 </html>
