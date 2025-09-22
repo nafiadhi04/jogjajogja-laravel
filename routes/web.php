@@ -5,7 +5,6 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PageController;
-
 use App\Models\User;
 
 /*
@@ -31,8 +30,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard untuk semua user
     Route::get('/dashboard', function () {
         $user = auth()->user();
-        $totalUsers = User::count();
-        return view('dashboard', compact('user', 'totalUsers'));
+        return view('dashboard', ['user' => $user]);
     })->name('dashboard');
 
     // Profile management
@@ -48,19 +46,19 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Admin dashboard
     Route::get('/', function () {
-        $user = auth()->user();
-        $totalUsers = User::count();
-        $users = User::all();
-        return view('admin.dashboard', compact('user', 'totalUsers', 'users'));
+        return view('admin.dashboard', ['user' => auth()->user(), 'users' => User::all()]);
     })->name('dashboard');
 
     // User management CRUD
     Route::resource('users', UserController::class);
 
-    // Route untuk kelola penginapan (CRUD di Admin Panel)
-    // Sekarang tidak ada lagi konflik dengan route frontend
-    Route::resource('penginapan', PenginapanController::class)->except(['show']);
+    // ==========================================================
+    // ROUTE BARU UNTUK VERIFIKASI
+    // ==========================================================
+    Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
 
+    Route::get('penginapan/gambar/{gambar}/delete', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
+    Route::resource('penginapan', PenginapanController::class)->except(['show']);
 });
 
 require __DIR__ . '/auth.php';
