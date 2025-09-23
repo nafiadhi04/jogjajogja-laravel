@@ -327,22 +327,6 @@
                                                         </div>
                                                     </div>
                                                 @endif
-
-                                                {{-- Fasilitas --}}
-                                                @if($item->fasilitas && $item->fasilitas->count() > 0)
-                                                    <div class="mb-3">
-                                                        <div class="flex flex-wrap gap-1">
-                                                            @foreach($item->fasilitas->take(2) as $fasilitas)
-                                                                <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded">
-                                                                    {{ $fasilitas->nama }}
-                                                                </span>
-                                                            @endforeach
-                                                            @if($item->fasilitas->count() > 2)
-                                                                <span class="text-xs text-gray-500">+{{ $item->fasilitas->count() - 2 }} lagi</span>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                @endif
                                             </div>
                                         </div>
                 @empty
