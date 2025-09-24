@@ -20,11 +20,13 @@
                     <table class="min-w-full border border-gray-200">
                         <thead class="bg-gray-100">
                             <tr>
+                                <th class="px-4 py-3 text-left border">No.</th>
                                 <th class="px-4 py-3 text-left border">Thumbnail</th>
                                 <th class="px-4 py-3 text-left border">Nama Artikel</th>
                                 @if(Auth::user()->role === 'admin')
                                     <th class="px-4 py-3 text-left border">Author</th>
                                 @endif
+                                <th class="px-4 py-3 text-left border">Views</th>
                                 <th class="px-4 py-3 text-left border">Status</th>
                                 <th class="px-4 py-3 text-left border">Aksi</th>
                             </tr>
@@ -32,11 +34,13 @@
                         <tbody>
                             @forelse ($all_penginapan as $item)
                                 <tr class="hover:bg-gray-50" x-data="{ modalOpen: false }">
+                                    <td class="px-4 py-2 text-center border">
+                                        {{ ($all_penginapan->currentPage() - 1) * $all_penginapan->perPage() + $loop->iteration }}
+                                    </td>
                                     <td class="px-4 py-2 border">
                                         <img src="{{ asset('storage/' . $item->thumbnail) }}" alt="{{ $item->nama }}" class="object-cover w-24 h-16 rounded-md">
                                     </td>
                                     <td class="px-4 py-2 border">
-                                        {{-- Jika status diterima, link akan ke halaman publik --}}
                                         @if($item->status == 'diterima')
                                             <a href="{{ route('penginapan.detail', $item->slug) }}" target="_blank" class="font-semibold text-indigo-600 hover:underline">
                                                 {{ $item->nama }}
@@ -51,8 +55,21 @@
                                         @endif
                                     </td>
                                     @if(Auth::user()->role === 'admin')
-                                        <td class="px-4 py-2 border">{{ $item->author->name }}</td>
+                                        <td class="px-4 py-2 border">
+                                            {{-- ========================================================== --}}
+                                            {{-- PERUBAHAN UTAMA ADA DI SINI --}}
+                                            {{-- ========================================================== --}}
+                                            <div>{{ $item->author->name }}</div>
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                                @if($item->author->role == 'admin') bg-indigo-100 text-indigo-800 
+                                                @else bg-gray-100 text-gray-800 @endif">
+                                                {{ ucfirst($item->author->role) }}
+                                            </span>
+                                        </td>
                                     @endif
+                                    <td class="px-4 py-2 text-center border">
+                                        {{ $item->views }}
+                                    </td>
                                     <td class="px-4 py-2 border">
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full 
                                             @if($item->status == 'diterima') bg-green-100 text-green-800
@@ -64,18 +81,16 @@
                                     <td class="px-4 py-2 border">
                                         <div class="flex items-center space-x-2">
                                             {{-- Aksi untuk Admin --}}
-                                            @if(Auth::user()->role === 'admin')
+                                            @can('admin')
                                                 @if(in_array($item->status, ['verifikasi', 'revisi']))
                                                     <button @click="modalOpen = true" class="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700">Verifikasi</button>
                                                 @endif
                                                 <a href="{{ route('admin.penginapan.edit', $item) }}" class="px-3 py-1 text-sm text-white bg-yellow-500 rounded-md hover:bg-yellow-600">Edit</a>
-                                            @endif
+                                            @endcan
 
                                             {{-- Aksi untuk Member --}}
-                                            @if(Auth::user()->role === 'member')
-                                                @if($item->status === 'revisi')
-                                                    <a href="{{ route('admin.penginapan.edit', $item) }}" class="px-3 py-1 text-sm text-white bg-yellow-500 rounded-md hover:bg-yellow-600">Revisi Artikel</a>
-                                                @endif
+                                            @if(Auth::user()->role === 'member' && $item->status === 'revisi')
+                                                <a href="{{ route('admin.penginapan.edit', $item) }}" class="px-3 py-1 text-sm text-white bg-yellow-500 rounded-md hover:bg-yellow-600">Revisi Artikel</a>
                                             @endif
                                             
                                             {{-- Tombol Hapus untuk semua (logika otorisasi ada di controller) --}}
@@ -86,7 +101,7 @@
                                         </div>
 
                                         {{-- Modal untuk Update Status (hanya untuk admin) --}}
-                                        @if(Auth::user()->role === 'admin')
+                                        @can('admin')
                                         <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
                                             <div x-show="modalOpen" x-transition class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
                                             <div x-show="modalOpen" x-transition @click.outside="modalOpen = false" class="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
@@ -115,12 +130,13 @@
                                                 </form>
                                             </div>
                                         </div>
-                                        @endif
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ Auth::user()->role === 'admin' ? '5' : '4' }}" class="px-4 py-12 text-center text-gray-500 border">
+                                    {{-- Colspan disesuaikan dengan jumlah kolom --}}
+                                    <td colspan="{{ Auth::user()->role === 'admin' ? '7' : '6' }}" class="px-4 py-12 text-center text-gray-500 border">
                                         Tidak ada data artikel.
                                     </td>
                                 </tr>
@@ -136,3 +152,4 @@
         </div>
     </div>
 </x-app-layout>
+
