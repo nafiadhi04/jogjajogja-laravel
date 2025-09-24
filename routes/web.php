@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PageController;
 use App\Models\User;
-use App\Models\Penginapan; // <-- Pastikan model ini di-import
+use App\Models\Penginapan;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,36 +28,24 @@ Route::get('/penginapan/{penginapan:slug}', [PageController::class, 'detailPengi
 
 Route::middleware(['auth'])->group(function () {
 
-    // ==========================================================
-    // PERUBAHAN UTAMA ADA DI SINI
-    // Route dashboard sekarang mengambil data statistik berdasarkan peran
-    // ==========================================================
     Route::get('/dashboard', function () {
         $user = auth()->user();
-
-        // Inisialisasi variabel
         $totalPenginapan = 0;
-        $totalUsers = 0; // Variabel baru untuk total user
-
-        // Variabel untuk member
+        $totalUsers = 0;
         $penginapanVerifikasi = 0;
         $penginapanRevisi = 0;
         $penginapanDiterima = 0;
 
-        // Logika untuk Admin
         if ($user->role === 'admin') {
             $totalPenginapan = Penginapan::count();
-            $totalUsers = User::count(); // Menghitung semua user
-        }
-        // Logika untuk Member
-        else {
+            $totalUsers = User::count();
+        } else {
             $totalPenginapan = Penginapan::where('user_id', $user->id)->count();
             $penginapanVerifikasi = Penginapan::where('user_id', $user->id)->where('status', 'verifikasi')->count();
             $penginapanRevisi = Penginapan::where('user_id', $user->id)->where('status', 'revisi')->count();
             $penginapanDiterima = Penginapan::where('user_id', $user->id)->where('status', 'diterima')->count();
         }
 
-        // Kirim semua variabel ke view
         return view('dashboard', compact(
             'user',
             'totalPenginapan',
@@ -81,9 +69,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // User management CRUD
     Route::resource('users', UserController::class);
 
-    // Route untuk kelola penginapan
+    // ==========================================================
+    // RUTE BARU DITAMBAHKAN DI SINI
+    // Diletakkan sebelum resource route untuk prioritas
+    // ==========================================================
+    Route::post('penginapan/destroy-multiple', [PenginapanController::class, 'destroyMultiple'])->name('penginapan.destroy.multiple');
     Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
-    Route::get('penginapan/gambar/{gambar}/delete', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
+    Route::delete('penginapan/gambar/{gambar}', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
+
+    // Resource route untuk kelola penginapan
     Route::resource('penginapan', PenginapanController::class)->except(['show']);
 });
 

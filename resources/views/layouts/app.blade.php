@@ -29,6 +29,7 @@ $user = auth()->user();
         <x-sidebar :user="$user" />
 
         {{-- 2. Area Konten Utama --}}
+    <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div class="flex flex-col flex-1">
             <main class="flex-1 overflow-y-auto bg-">
 
@@ -80,7 +81,7 @@ $user = auth()->user();
                 </div>
             </main>
         </div>
-
+    </div>
     </div>
 
     @stack('scripts')

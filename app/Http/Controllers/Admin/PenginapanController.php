@@ -7,20 +7,19 @@ use Illuminate\Http\Request;
 use App\Models\Fasilitas;
 use App\Models\Penginapan;
 use App\Models\GambarPenginapan;
-use App\Models\User; // <-- Import User
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate; // <-- Import Gate
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class PenginapanController extends Controller
 {
     /**
-     * Menampilkan daftar artikel.
-     * Admin melihat semua; member hanya melihat miliknya.
+     * Menampilkan daftar artikel dengan filter pencarian tunggal.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $query = Penginapan::query();
@@ -29,7 +28,25 @@ class PenginapanController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        $all_penginapan = $query->with('author')->latest()->paginate(10);
+        // Logika filter pencarian tunggal
+        $query->when($request->search, function ($q, $search) use ($user) {
+            return $q->where(function ($subQuery) use ($search, $user) {
+                $subQuery->where('nama', 'like', "%{$search}%")
+                    ->orWhere('kota', 'like', "%{$search}%")
+                    ->orWhere('tipe', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%");
+
+                // Hanya admin yang bisa mencari berdasarkan nama author
+                if ($user->role === 'admin') {
+                    $subQuery->orWhereHas('author', function ($authorQuery) use ($search) {
+                        $authorQuery->where('name', 'like', "%{$search}%");
+                    });
+                }
+            });
+        });
+
+        $all_penginapan = $query->with('author')->latest()->paginate(10)->withQueryString();
+
         return view('admin.penginapan.index', compact('all_penginapan'));
     }
 
@@ -82,7 +99,7 @@ class PenginapanController extends Controller
             'tipe' => $validated['tipe'],
             'kota' => $validated['kota'],
             'thumbnail' => $thumbnailPath,
-            'status' => 'verifikasi', // <-- Status default saat member membuat artikel
+            'status' => 'verifikasi',
         ]);
 
         if ($request->has('fasilitas')) {
@@ -106,20 +123,11 @@ class PenginapanController extends Controller
     public function edit(Penginapan $penginapan)
     {
         $user = Auth::user();
-
-        // Admin bisa edit kapan saja.
-        if ($user->role === 'admin') {
+        if ($user->role === 'admin' || ($penginapan->user_id === $user->id && $penginapan->status === 'revisi')) {
             $fasilitas = Fasilitas::all();
             return view('admin.penginapan.edit', compact('penginapan', 'fasilitas'));
         }
-
-        // Member hanya bisa edit jika artikel miliknya DAN statusnya 'revisi'.
-        if ($penginapan->user_id !== $user->id || $penginapan->status !== 'revisi') {
-            abort(403, 'AKSI TIDAK DIIZINKAN.');
-        }
-
-        $fasilitas = Fasilitas::all();
-        return view('admin.penginapan.edit', compact('penginapan', 'fasilitas'));
+        abort(403, 'AKSI TIDAK DIIZINKAN.');
     }
 
     /**
@@ -155,8 +163,8 @@ class PenginapanController extends Controller
             'periode_harga' => $request->periode_harga,
             'tipe' => $request->tipe,
             'kota' => $request->kota,
-            'status' => 'verifikasi', // <-- Setelah di-edit, status kembali ke verifikasi
-            'catatan_revisi' => null, // <-- Hapus catatan revisi lama
+            'status' => 'verifikasi',
+            'catatan_revisi' => null,
         ]);
 
         if ($request->hasFile('thumbnail')) {
@@ -172,9 +180,7 @@ class PenginapanController extends Controller
         if ($request->hasFile('gambar')) {
             foreach ($request->file('gambar') as $file) {
                 $gambarPath = $file->store('galeri_penginapan', 'public');
-                $penginapan->gambar()->create([
-                    'path_gambar' => $gambarPath,
-                ]);
+                $penginapan->gambar()->create(['path_gambar' => $gambarPath]);
             }
         }
 
@@ -182,46 +188,82 @@ class PenginapanController extends Controller
             ->with('success', 'Artikel berhasil diperbarui dan dikirim ulang untuk verifikasi.');
     }
 
+    /**
+     * Menghapus satu artikel.
+     */
     public function destroy(Penginapan $penginapan)
     {
         if (Auth::user()->role !== 'admin' && $penginapan->user_id !== Auth::id()) {
             abort(403, 'AKSI TIDAK DIIZINKAN.');
         }
 
-        // ... (sisa logika destroy)
+        if ($penginapan->thumbnail) {
+            Storage::disk('public')->delete($penginapan->thumbnail);
+        }
+
+        foreach ($penginapan->gambar as $gambar) {
+            Storage::disk('public')->delete($gambar->path_gambar);
+        }
+
+        $penginapan->fasilitas()->detach();
+        $penginapan->gambar()->delete();
+        $penginapan->delete();
+
+        return redirect()->route('admin.penginapan.index')
+            ->with('success', 'Artikel penginapan berhasil dihapus!');
     }
 
+    /**
+     * Menghapus beberapa artikel yang dipilih secara massal.
+     */
+    public function destroyMultiple(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:penginapans,id'],
+        ]);
+
+        $user = Auth::user();
+        $query = Penginapan::whereIn('id', $validated['ids']);
+
+        if ($user->role === 'member') {
+            $query->where('user_id', $user->id);
+        }
+
+        $penginapansToDelete = $query->get();
+
+        foreach ($penginapansToDelete as $penginapan) {
+            if ($penginapan->thumbnail) {
+                Storage::disk('public')->delete($penginapan->thumbnail);
+            }
+            foreach ($penginapan->gambar as $gambar) {
+                Storage::disk('public')->delete($gambar->path_gambar);
+            }
+            $penginapan->delete();
+        }
+
+        return redirect()->route('admin.penginapan.index')
+            ->with('success', 'Artikel yang dipilih berhasil dihapus.');
+    }
+
+    /**
+     * Menghapus satu gambar galeri.
+     */
     public function destroyGambar(GambarPenginapan $gambar)
     {
         if (Auth::user()->role !== 'admin' && $gambar->penginapan->user_id !== Auth::id()) {
             abort(403, 'AKSI TIDAK DIIZINKAN.');
         }
 
-        // ... (sisa logika destroyGambar)
-    }
+        Storage::disk('public')->delete($gambar->path_gambar);
+        $gambar->delete();
 
-    // ==========================================================
-    // METHOD BARU KHUSUS ADMIN
-    // ==========================================================
+        return response()->json(['success' => 'Gambar galeri berhasil dihapus!']);
+    }
 
     /**
-     * Menampilkan daftar artikel yang perlu diverifikasi.
+     * Mengupdate status artikel (terima atau revisi).
      */
-    public function verifikasiIndex()
-    {
-        // Hanya admin yang bisa mengakses halaman ini
-        if (!Gate::allows('admin')) {
-            abort(403);
-        }
-
-        $penginapanUntukVerifikasi = Penginapan::whereIn('status', ['verifikasi', 'revisi'])
-            ->with('author')
-            ->latest()
-            ->paginate(10);
-
-        return view('admin.penginapan.verifikasi', compact('penginapanUntukVerifikasi'));
-    }
-
     public function updateStatus(Request $request, Penginapan $penginapan)
     {
         if (!Gate::allows('admin')) {
@@ -239,7 +281,5 @@ class PenginapanController extends Controller
 
         return back()->with('success', 'Status artikel berhasil diperbarui.');
     }
-
-
 }
 
