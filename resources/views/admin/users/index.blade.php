@@ -1,21 +1,35 @@
 <x-app-layout>
-    <div class="py-12">
+    {{-- PERBAIKAN: Mengganti '$all_penginapan' menjadi '$users' --}}
+    <div class="py-12" x-data="{
+        selectedIds: [],
+        selectAll: false,
+        itemsOnPage: {{ $users->count() }},
+        toggleSelectAll() {
+            this.selectAll = !this.selectAll;
+            if (this.selectAll) {
+                this.selectedIds = Array.from(document.querySelectorAll('.item-checkbox')).map(cb => cb.value);
+            } else {
+                this.selectedIds = [];
+            }
+        }
+    }">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="p-6 bg-white rounded-lg shadow-xl">
 
-                <h1 class="mb-4 text-2xl font-bold">Daftar User</h1>
-
-                {{-- Tombol Tambah User --}}
-                <div class="mb-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold">Daftar User</h1>
                     <a href="{{ route('admin.users.create') }}"
-                        class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
+                        class="px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
                         Tambah User
                     </a>
                 </div>
 
+                {{-- (Tambahkan tombol hapus massal jika diperlukan) --}}
+
                 <table class="min-w-full border border-gray-200">
                     <thead>
                         <tr class="bg-gray-100">
+                            {{-- (Tambahkan checkbox massal jika diperlukan) --}}
                             <th class="px-4 py-2 border">ID</th>
                             <th class="px-4 py-2 border">Nama</th>
                             <th class="px-4 py-2 border">Email</th>
@@ -31,25 +45,19 @@
                                 <td class="px-4 py-2 border">{{ $user->email }}</td>
                                 <td class="px-4 py-2 border">{{ $user->role }}</td>
                                 <td class="px-4 py-2 space-x-2 border">
-
-                                    {{-- Tombol Edit --}}
                                     <a href="{{ route('admin.users.edit', $user->id) }}"
                                         class="text-blue-600 hover:underline">
                                         Edit
                                     </a>
-
-                                    {{-- Tombol Hapus --}}
                                     <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
-                                        class="inline">
+                                        class="inline"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit"
-                                            onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
-                                            class="text-red-600 hover:underline">
+                                        <button type="submit" class="text-red-600 hover:underline">
                                             Hapus
                                         </button>
                                     </form>
-
                                 </td>
                             </tr>
                         @endforeach
