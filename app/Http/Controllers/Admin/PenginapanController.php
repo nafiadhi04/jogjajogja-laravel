@@ -258,7 +258,7 @@ class PenginapanController extends Controller
         Storage::disk('public')->delete($gambar->path_gambar);
         $gambar->delete();
 
-        return response()->json(['success' => 'Gambar galeri berhasil dihapus!']);
+        return back()->with('success_gambar', 'Gambar galeri berhasil dihapus!');
     }
 
     /**
