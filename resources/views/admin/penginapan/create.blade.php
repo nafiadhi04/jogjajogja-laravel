@@ -47,7 +47,7 @@
                             <select name="kota" id="kota" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
                                 <option value="">Pilih Kota/Kabupaten</option>
-                                <option value="Yogyakarta" @selected(old('kota') == 'Yogyakarta')>Yogyakarta</option>
+                                <option value="Kota Yogyakarta" @selected(old('kota') == 'Kota Yogyakarta')>Kota Yogyakarta</option>
                                 <option value="Sleman" @selected(old('kota') == 'Sleman')>Sleman</option>
                                 <option value="Bantul" @selected(old('kota') == 'Bantul')>Bantul</option>
                                 <option value="Gunungkidul" @selected(old('kota') == 'Gunungkidul')>Gunungkidul</option>

@@ -406,7 +406,6 @@
                     arrow.classList.toggle('rotate-180');
                 });
             }
-            
         });
     </script>
 </x-guest-layout>
