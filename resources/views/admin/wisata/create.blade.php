@@ -3,11 +3,11 @@
         <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     @endpush
 
-    {{-- Compact Add Penginapan (UI lebih padat, fungsional tetap sama) --}}
+    {{-- Compact Add Wisata (UI lebih padat, fungsional tetap sama) --}}
     <div class="py-8" x-data="formManager()">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="p-4 overflow-hidden bg-white rounded-lg shadow">
-                <h1 class="mb-4 text-lg font-semibold text-gray-800">Tambah Artikel Penginapan Baru</h1>
+                <h1 class="mb-4 text-lg font-semibold text-gray-800">Tambah Artikel Wisata Baru</h1>
 
                 @if ($errors->any())
                     <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded" role="alert">
@@ -20,29 +20,25 @@
                     </div>
                 @endif
 
-                {{-- Menambahkan @submit untuk mempersiapkan file sebelum dikirim --}}
-                <form action="{{ route('admin.penginapan.store') }}" method="POST" enctype="multipart/form-data"
+                <form action="{{ route('admin.wisata.store') }}" method="POST" enctype="multipart/form-data"
                     class="space-y-4" @submit="prepareFormSubmit">
                     @csrf
 
                     {{-- Baris 1: Nama, Tipe, Kota --}}
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
-                            <label for="nama" class="block text-xs font-medium text-gray-700">Nama Penginapan</label>
+                            <label for="nama" class="block text-xs font-medium text-gray-700">Nama Wisata</label>
                             <input type="text" name="nama" id="nama" value="{{ old('nama') }}" required maxlength="100"
                                 class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
                         </div>
                         <div>
-                            <label for="tipe" class="block text-xs font-medium text-gray-700">Tipe Penginapan</label>
-                            <select name="tipe" id="tipe" required
+                            <label for="tipe" class="block text-xs font-medium text-gray-700">Tipe Wisata</label>
+                            <input type="text" name="tipe" id="tipe" value="{{ old('tipe') }}" required
+                                placeholder="Contoh: Alam, Budaya, Kuliner"
                                 class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
-                                <option value="">Pilih Tipe</option>
-                                <option value="Villa" @selected(old('tipe') == 'Villa')>Villa</option>
-                                <option value="Hotel" @selected(old('tipe') == 'Hotel')>Hotel</option>
-                            </select>
                         </div>
                         <div>
-                            <label for="kota" class="block text-xs font-medium text-gray-700">Lokasi</label>
+                            <label for="kota" class="block text-xs font-medium text-gray-700">Kota</label>
                             <select name="kota" id="kota" required
                                 class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
                                 <option value="">Pilih Kota/Kabupaten</option>
@@ -65,25 +61,14 @@
                         <div id="editor-container" class="h-64 mt-1">{!! old('deskripsi') !!}</div>
                     </div>
 
-                    {{-- Baris 3: Harga & Periode --}}
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label for="harga" class="block text-xs font-medium text-gray-700">Harga (Rp)</label>
-                            <input type="text" name="harga" id="harga" value="{{ old('harga') }}" required
-                                inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                                class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
-                        </div>
-                        <div>
-                            <label for="periode_harga" class="block text-xs font-medium text-gray-700">Periode
-                                Harga</label>
-                            <select name="periode_harga" id="periode_harga" required
-                                class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
-                                <option value="Harian" @selected(old('periode_harga') == 'Harian')>Harian</option>
-                                <option value="Mingguan" @selected(old('periode_harga') == 'Mingguan')>Mingguan</option>
-                                <option value="Bulanan" @selected(old('periode_harga') == 'Bulanan')>Bulanan</option>
-                                <option value="Tahunan" @selected(old('periode_harga') == 'Tahunan')>Tahunan</option>
-                            </select>
-                        </div>
+                    {{-- Harga Tiket --}}
+                    <div>
+                        <label for="harga_tiket" class="block text-xs font-medium text-gray-700">Harga Tiket
+                            (Rp)</label>
+                        <input type="text" name="harga_tiket" id="harga_tiket" value="{{ old('harga_tiket', 0) }}"
+                            required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                            class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
+                        <p class="mt-1 text-xs text-gray-500">Isi 0 jika gratis.</p>
                     </div>
 
                     {{-- Fasilitas --}}
@@ -94,9 +79,7 @@
                                 <div class="flex items-start">
                                     <div class="flex items-center h-4">
                                         <input id="fasilitas-{{ $item->id }}" name="fasilitas[]" value="{{ $item->id }}"
-                                            type="checkbox" class="w-4 h-4 text-indigo-600 border-gray-300 rounded"
-                                            @if(is_array(old('fasilitas')) && in_array($item->id, old('fasilitas'))) checked
-                                            @endif>
+                                            type="checkbox" class="w-4 h-4 text-indigo-600 border-gray-300 rounded">
                                     </div>
                                     <div class="ml-2 text-xs">
                                         <label for="fasilitas-{{ $item->id }}"
@@ -161,7 +144,7 @@
 
                     {{-- Tombol aksi --}}
                     <div class="flex items-center justify-end pt-4 space-x-3">
-                        <a href="{{ route('admin.penginapan.index') }}"
+                        <a href="{{ route('admin.wisata.index') }}"
                             class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">
                             Batal
                         </a>
@@ -192,9 +175,7 @@
                             const file = event.target.files[i];
                             this.galleryFiles.push(file);
                             const reader = new FileReader();
-                            reader.onload = (e) => {
-                                this.galleryPreviews.push(e.target.result);
-                            };
+                            reader.onload = (e) => { this.galleryPreviews.push(e.target.result); };
                             reader.readAsDataURL(file);
                         }
                         event.target.value = null;
@@ -207,9 +188,7 @@
 
                     prepareFormSubmit() {
                         const dataTransfer = new DataTransfer();
-                        this.galleryFiles.forEach(file => {
-                            dataTransfer.items.add(file);
-                        });
+                        this.galleryFiles.forEach(file => { dataTransfer.items.add(file); });
                         this.$refs.galleryInput.files = dataTransfer.files;
                     }
                 }

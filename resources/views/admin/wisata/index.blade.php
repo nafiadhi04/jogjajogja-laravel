@@ -1,9 +1,8 @@
 <x-app-layout>
-    {{-- Menggunakan Alpine.js untuk mengelola state tabel --}}
     <div class="py-8" x-data="{
         selectedIds: [],
         selectAll: false,
-        itemsOnPage: {{ $all_penginapan->count() }},
+        itemsOnPage: {{ $all_wisata->count() }},
         toggleSelectAll() {
             this.selectAll = !this.selectAll;
             if (this.selectAll) {
@@ -19,48 +18,28 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="p-4 overflow-hidden bg-white rounded-lg shadow">
 
-                {{-- Header Halaman dengan Tombol Aksi --}}
                 <div class="flex flex-col mb-4 md:flex-row md:items-center md:justify-between">
-                    <h1 class="text-lg font-semibold text-gray-800">Kelola Artikel Penginapan</h1>
-
-                    <div class="flex items-center mt-3 space-x-3 md:mt-0">
-                        <!-- Tombol Hapus Massal -->
-                        <div x-show="selectedIds.length > 0" x-transition>
-                            <form action="{{ route('admin.penginapan.destroy.multiple') }}" method="POST"
-                                onsubmit="return confirm('Anda yakin ingin menghapus ' + selectedIds.length + ' artikel yang dipilih?');">
-                                @csrf
-                                <template x-for="id in selectedIds" :key="id">
-                                    <input type="hidden" name="ids[]" :value="id">
-                                </template>
-                                <button type="submit"
-                                    class="px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded hover:bg-red-700">
-                                    Hapus (<span x-text="selectedIds.length"></span>)
-                                </button>
-                            </form>
-                        </div>
-
-                        {{-- Tombol Tambah Artikel --}}
-                        <a href="{{ route('admin.penginapan.create') }}"
-                            class="px-3 py-1 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700">
-                            + Tambah Artikel
-                        </a>
-                    </div>
+                    <h1 class="text-lg font-semibold text-gray-800">Kelola Artikel Wisata</h1>
+                    <a href="{{ route('admin.wisata.create') }}"
+                        class="px-3 py-1 mt-3 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700 md:mt-0">
+                        + Tambah Artikel
+                    </a>
                 </div>
 
                 <!-- Formulir Filter Pencarian -->
                 <div class="p-3 mb-4 rounded bg-gray-50">
-                    <form action="{{ route('admin.penginapan.index') }}" method="GET">
+                    <form action="{{ route('admin.wisata.index') }}" method="GET">
                         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
                             <div class="md:col-span-3">
                                 <label for="search" class="text-xs font-medium text-gray-700">Cari Artikel</label>
                                 <input type="text" name="search" id="search" value="{{ request('search') }}"
                                     class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm"
-                                    placeholder="Ketik nama penginapan, kota, tipe, status, atau author...">
+                                    placeholder="Ketik nama wisata, kota, tipe, status, atau author...">
                             </div>
                             <div class="flex items-end space-x-2">
                                 <button type="submit"
                                     class="w-full px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">Cari</button>
-                                <a href="{{ route('admin.penginapan.index') }}"
+                                <a href="{{ route('admin.wisata.index') }}"
                                     class="w-full px-3 py-1 text-xs font-semibold text-center text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Reset</a>
                             </div>
                         </div>
@@ -92,7 +71,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($all_penginapan as $item)
+                            @forelse ($all_wisata as $item)
                                 <tr class="align-top hover:bg-gray-50" x-data="{ modalOpen: false }">
                                     <td class="px-2 py-2 text-center align-middle border">
                                         <input type="checkbox" value="{{ $item->id }}" x-model="selectedIds"
@@ -104,7 +83,7 @@
                                     </td>
                                     <td class="px-2 py-2 align-top border">
                                         @if($item->status == 'diterima')
-                                            <a href="{{ route('penginapan.detail', $item->slug) }}" target="_blank"
+                                            <a href="{{ route('wisata.detail', $item->slug) }}" target="_blank"
                                                 class="text-sm font-medium text-indigo-600 hover:underline">
                                                 {{ $item->nama }}
                                             </a>
@@ -150,11 +129,11 @@
                                             @endcan
 
                                             @if(Auth::user()->role === 'admin' || (Auth::user()->role === 'member' && $item->status === 'revisi'))
-                                                <a href="{{ route('admin.penginapan.edit', $item) }}"
+                                                <a href="{{ route('admin.wisata.edit', $item) }}"
                                                     class="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded hover:bg-yellow-600">Edit</a>
                                             @endif
 
-                                            <form action="{{ route('admin.penginapan.destroy', $item) }}" method="POST"
+                                            <form action="{{ route('admin.wisata.destroy', $item) }}" method="POST"
                                                 onsubmit="return confirm('Yakin ingin menghapus artikel ini?');"
                                                 class="inline">
                                                 @csrf @method('DELETE')
@@ -170,7 +149,7 @@
                                                     class="fixed inset-0 bg-gray-500 bg-opacity-60"></div>
                                                 <div x-show="modalOpen" x-transition @click.outside="modalOpen = false"
                                                     class="relative w-full max-w-md bg-white rounded-lg shadow-lg">
-                                                    <form action="{{ route('admin.penginapan.status.update', $item) }}"
+                                                    <form action="{{ route('admin.wisata.status.update', $item) }}"
                                                         method="POST">
                                                         @csrf @method('PATCH')
                                                         <div class="p-4">
@@ -211,9 +190,9 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ Auth::user()->role === 'admin' ? '8' : '7' }}"
+                                    <td colspan="{{ Auth::user()->role === 'admin' ? '7' : '6' }}"
                                         class="px-4 py-8 text-sm text-center text-gray-500 border">
-                                        Tidak ada data artikel yang cocok dengan pencarian.
+                                        Tidak ada data artikel wisata.
                                     </td>
                                 </tr>
                             @endforelse
@@ -222,7 +201,7 @@
                 </div>
 
                 <div class="mt-4">
-                    {{ $all_penginapan->links() }}
+                    {{ $all_wisata->links() }}
                 </div>
             </div>
         </div>

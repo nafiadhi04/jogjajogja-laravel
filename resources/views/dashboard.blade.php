@@ -1,87 +1,92 @@
 <x-app-layout>
-    {{-- Latar belakang putih untuk seluruh area konten --}}
     <div class="flex flex-col flex-1 overflow-y-auto bg-white">
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-4">
+
             {{-- Header Sambutan --}}
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Selamat datang, {{ Auth::user()->name }}!</h1>
-                <p class="mt-1 text-gray-600">Ini adalah ringkasan aktivitas di dashboard Anda.</p>
+            <div class="mb-6">
+                <h1 class="text-lg font-semibold text-gray-800">Selamat datang, {{ Auth::user()->name }}!</h1>
+                <p class="mt-1 text-sm text-gray-600">Ringkasan aktivitas dashboard Anda.</p>
             </div>
 
-            {{-- ========================================================== --}}
             {{-- Tampilan untuk ADMIN --}}
-            {{-- ========================================================== --}}
             @if(Auth::user()->role === 'admin')
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 
                     {{-- Card Total Penginapan --}}
-                    <div class="flex items-center justify-between p-6 bg-green-100 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between p-4 bg-green-100 rounded-md shadow">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Total Penginapan</h2>
-                            <p class="mt-2 text-3xl font-bold text-green-700">{{ $totalPenginapan ?? 0 }}</p>
+                            <h2 class="text-sm font-medium text-gray-800">Total Penginapan</h2>
+                            <p class="mt-1 text-2xl font-bold text-green-700">{{ $totalPenginapan ?? 0 }}</p>
                         </div>
-                        <div class="p-3 bg-green-200 rounded-full">
-                            {{-- PERBAIKAN: Ikon diganti dengan Google Material Symbols --}}
-                            <span class="text-4xl text-green-700 material-symbols-outlined">
-                                villa
-                            </span>
+                        <div class="p-2 bg-green-200 rounded-full">
+                            <span class="text-2xl text-green-700 material-symbols-outlined">villa</span>
                         </div>
                     </div>
 
-                    {{-- Card Total Wisata (Placeholder) --}}
-                    <div class="flex items-center justify-between p-6 bg-blue-100 rounded-lg shadow-md">
+                    {{-- Card Total Wisata --}}
+                    <div class="flex items-center justify-between p-4 bg-blue-100 rounded-md shadow">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Total Wisata</h2>
-                            <p class="mt-2 text-3xl font-bold text-blue-700">0</p>
+                            <h2 class="text-sm font-medium text-gray-800">Total Wisata</h2>
+                            <p class="mt-1 text-2xl font-bold text-blue-700">{{ $totalWisata ?? 0 }}</p>
                         </div>
-                        <div class="p-3 bg-blue-200 rounded-full">
-                            {{-- PERBAIKAN: Ikon diganti dengan Google Material Symbols --}}
-                            <span class="text-4xl text-blue-700 material-symbols-outlined">
-                                landscape
-                            </span>
+                        <div class="p-2 bg-blue-200 rounded-full">
+                            <span class="text-2xl text-blue-700 material-symbols-outlined">landscape</span>
                         </div>
                     </div>
 
                     {{-- Card Total User --}}
-                    <div class="flex items-center justify-between p-6 bg-purple-100 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between p-4 bg-purple-100 rounded-md shadow">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Total User</h2>
-                            <p class="mt-2 text-3xl font-bold text-purple-700">{{ $totalUsers ?? 0 }}</p>
+                            <h2 class="text-sm font-medium text-gray-800">Total User</h2>
+                            <p class="mt-1 text-2xl font-bold text-purple-700">{{ $totalUsers ?? 0 }}</p>
                         </div>
-                        <div class="p-3 bg-purple-200 rounded-full">
-                            {{-- PERBAIKAN: Ikon diganti dengan Google Material Symbols --}}
-                            <span class="text-4xl text-purple-700 material-symbols-outlined">
-                                group
-                            </span>
+                        <div class="p-2 bg-purple-200 rounded-full">
+                            <span class="text-2xl text-purple-700 material-symbols-outlined">group</span>
                         </div>
                     </div>
-
                 </div>
 
-                {{-- ========================================================== --}}
                 {{-- Tampilan untuk MEMBER --}}
-                {{-- ========================================================== --}}
             @else
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {{-- Card Total Artikel Saya --}}
-                    <div class="p-6 bg-green-100 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold text-gray-800">Total Artikel Saya</h2>
-                        <p class="mt-2 text-3xl font-bold text-green-700">{{ $totalPenginapan ?? 0 }}</p>
+                {{-- Statistik Penginapan --}}
+                <h3 class="mb-3 text-sm font-semibold text-gray-700">Statistik Penginapan Saya</h3>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div class="p-4 bg-green-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Total Artikel</h2>
+                        <p class="mt-1 text-2xl font-bold text-green-700">{{ $totalPenginapan ?? 0 }}</p>
                     </div>
-                    {{-- Card Menunggu Verifikasi --}}
-                    <div class="p-6 bg-yellow-100 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold text-gray-800">Menunggu Verifikasi</h2>
-                        <p class="mt-2 text-3xl font-bold text-yellow-700">{{ $penginapanVerifikasi ?? 0 }}</p>
+                    <div class="p-4 bg-yellow-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Verifikasi</h2>
+                        <p class="mt-1 text-2xl font-bold text-yellow-700">{{ $penginapanVerifikasi ?? 0 }}</p>
                     </div>
-                    {{-- Card Perlu Direvisi --}}
-                    <div class="p-6 bg-red-100 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold text-gray-800">Perlu Direvisi</h2>
-                        <p class="mt-2 text-3xl font-bold text-red-700">{{ $penginapanRevisi ?? 0 }}</p>
+                    <div class="p-4 bg-red-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Revisi</h2>
+                        <p class="mt-1 text-2xl font-bold text-red-700">{{ $penginapanRevisi ?? 0 }}</p>
                     </div>
-                    {{-- Card Sudah Diterima --}}
-                    <div class="p-6 bg-blue-100 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold text-gray-800">Sudah Diterima</h2>
-                        <p class="mt-2 text-3xl font-bold text-blue-700">{{ $penginapanDiterima ?? 0 }}</p>
+                    <div class="p-4 bg-blue-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Diterima</h2>
+                        <p class="mt-1 text-2xl font-bold text-blue-700">{{ $penginapanDiterima ?? 0 }}</p>
+                    </div>
+                </div>
+
+                {{-- Statistik Wisata --}}
+                <h3 class="mt-6 mb-3 text-sm font-semibold text-gray-700">Statistik Wisata Saya</h3>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div class="p-4 bg-green-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Total Artikel</h2>
+                        <p class="mt-1 text-2xl font-bold text-green-700">{{ $totalWisata ?? 0 }}</p>
+                    </div>
+                    <div class="p-4 bg-yellow-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Verifikasi</h2>
+                        <p class="mt-1 text-2xl font-bold text-yellow-700">{{ $wisataVerifikasi ?? 0 }}</p>
+                    </div>
+                    <div class="p-4 bg-red-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Revisi</h2>
+                        <p class="mt-1 text-2xl font-bold text-red-700">{{ $wisataRevisi ?? 0 }}</p>
+                    </div>
+                    <div class="p-4 bg-blue-100 rounded-md shadow">
+                        <h2 class="text-sm font-medium text-gray-800">Diterima</h2>
+                        <p class="mt-1 text-2xl font-bold text-blue-700">{{ $wisataDiterima ?? 0 }}</p>
                     </div>
                 </div>
             @endif

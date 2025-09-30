@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Fasilitas extends Model
 {
-    protected $fillable = ['nama'];
+    use HasFactory;
 
+    public function penginapan()
+    {
+        return $this->belongsToMany(Penginapan::class, 'fasilitas_penginapans');
+    }
+
+    // Tambahkan relasi ini
     public function wisatas()
     {
         return $this->belongsToMany(Wisata::class, 'fasilitas_wisata');
     }
-
-    public function penginapans()
-    {
-        return $this->belongsToMany(Penginapan::class, 'fasilitas_penginapan');
-    }
-}
-
+} 
