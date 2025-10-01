@@ -39,6 +39,9 @@
                                 <option value="">Pilih Tipe</option>
                                 <option value="Villa" @selected(old('tipe') == 'Villa')>Villa</option>
                                 <option value="Hotel" @selected(old('tipe') == 'Hotel')>Hotel</option>
+                                <option value="Guest House" @selected(old('tipe') == 'Guest House')>Guest House</option>
+                                <option value="Homestay" @selected(old('tipe') == 'Homestay')>Homestay</option>
+                                <option value="Losmen" @selected(old('tipe') == 'Losmen')>Losmen</option>
                             </select>
                         </div>
                         <div>

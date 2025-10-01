@@ -49,6 +49,9 @@
                                 class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
                                 <option value="Villa" @selected(old('tipe', $penginapan->tipe) == 'Villa')>Villa</option>
                                 <option value="Hotel" @selected(old('tipe', $penginapan->tipe) == 'Hotel')>Hotel</option>
+                                <option value="Guest House" @selected(old('tipe', $penginapan->tipe) == 'Guest House')>Guest House</option>
+                                <option value="Homestay" @selected(old('tipe', $penginapan->tipe) == 'Homestay')>Homestay</option>
+                                <option value="Losmen" @selected(old('tipe', $penginapan->tipe) == 'Losmen')>Losmen</option>
                             </select>
                         </div>
                         <div>
@@ -56,8 +59,8 @@
                             <select name="kota" id="kota" required
                                 class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm">
                                 <option value="">Pilih Kota/Kabupaten</option>
-                                <option value="Yogyakarta" @selected(old('kota', $penginapan->kota) == 'Yogyakarta')>
-                                    Yogyakarta</option>
+                                <option value="Kota Yogyakarta" @selected(old('kota', $penginapan->kota) == 'Kota Yogyakarta')>
+                                    Kota Yogyakarta</option>
                                 <option value="Sleman" @selected(old('kota', $penginapan->kota) == 'Sleman')>Sleman
                                 </option>
                                 <option value="Bantul" @selected(old('kota', $penginapan->kota) == 'Bantul')>Bantul

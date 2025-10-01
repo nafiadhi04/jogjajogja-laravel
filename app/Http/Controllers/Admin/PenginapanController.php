@@ -70,8 +70,13 @@ class PenginapanController extends Controller
             'lokasi' => ['nullable', 'url'],
             'harga' => ['required', 'integer', 'min:0'],
             'periode_harga' => ['required', 'string'],
+<<<<<<< HEAD
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel'])],
             'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+=======
+            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel' ,'Guest House','Homestay','Losmen'])],
+            'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+>>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
             'thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],
@@ -145,8 +150,13 @@ class PenginapanController extends Controller
             'lokasi' => ['nullable', 'url'],
             'harga' => ['required', 'integer', 'min:0'],
             'periode_harga' => ['required', 'string'],
+<<<<<<< HEAD
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel'])],
             'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+=======
+            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel','Guest House','Homestay','Losmen'])],
+            'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+>>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],
