@@ -8,11 +8,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PageController; // Pastikan PageController sudah di-import
 use App\Models\User;
 use App\Models\Penginapan;
-<<<<<<< HEAD
 use App\Models\Wisata;
-=======
 use App\Http\Controllers\HomeController;
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
 
 /*
 |--------------------------------------------------------------------------
@@ -29,26 +26,19 @@ Route::get('/', [PageController::class, 'index'])->name('home');
 Route::get('/penginapan', [PageController::class, 'listPenginapan'])->name('penginapan.list');
 Route::get('/penginapan/{penginapan:slug}', [PageController::class, 'detailPenginapan'])->name('penginapan.detail');
 
-<<<<<<< HEAD
 // Route untuk Wisata
 Route::get('/wisata', [PageController::class, 'listWisata'])->name('wisata.list');
 Route::get('/wisata/{wisata:slug}', [PageController::class, 'detailWisata'])->name('wisata.detail');
 
 
-=======
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
 // == ROUTE UNTUK USER YANG SUDAH LOGIN ==
 
 Route::middleware(['auth'])->group(function () {
     // ... (kode di sini tidak perlu diubah) ...
     Route::get('/dashboard', function () {
-<<<<<<< HEAD
         $user = auth()->user();
 
         // Inisialisasi variabel
-=======
-        $user = \Illuminate\Support\Facades\Auth::user();
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
         $totalPenginapan = 0;
         $totalWisata = 0; // <-- Variabel baru
         $totalUsers = 0;
@@ -113,11 +103,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // User management CRUD
     Route::resource('users', UserController::class);
 
-<<<<<<< HEAD
     // --- Penginapan Routes ---
-=======
     Route::get('/', [PageController::class, 'index'])->name('home');
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
     Route::post('penginapan/destroy-multiple', [PenginapanController::class, 'destroyMultiple'])->name('penginapan.destroy.multiple');
     Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
     Route::get('penginapan/gambar/{gambar}', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');

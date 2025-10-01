@@ -70,13 +70,10 @@ class PenginapanController extends Controller
             'lokasi' => ['nullable', 'url'],
             'harga' => ['required', 'integer', 'min:0'],
             'periode_harga' => ['required', 'string'],
-<<<<<<< HEAD
-            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel'])],
-            'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
-=======
-            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel' ,'Guest House','Homestay','Losmen'])],
+            // gunakan aturan tipe yang lebih lengkap
+            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
+            // gunakan daftar kota yang lebih lengkap (mis. "Kota Yogyakarta")
             'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
             'thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],
@@ -150,13 +147,10 @@ class PenginapanController extends Controller
             'lokasi' => ['nullable', 'url'],
             'harga' => ['required', 'integer', 'min:0'],
             'periode_harga' => ['required', 'string'],
-<<<<<<< HEAD
-            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel'])],
-            'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
-=======
-            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel','Guest House','Homestay','Losmen'])],
+            // gunakan aturan tipe yang lebih lengkap
+            'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
+            // gunakan daftar kota yang lebih lengkap
             'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
->>>>>>> 4310273791ca58fc2bce1538df1a44b617deacc1
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],
@@ -185,7 +179,8 @@ class PenginapanController extends Controller
             $penginapan->update(['thumbnail' => $thumbnailPath]);
         }
 
-        $penginapan->fasilitas()->sync($request->fasilitas);
+        // Pastikan sinkronisasi fasilitas aman jika tidak ada input fasilitas
+        $penginapan->fasilitas()->sync($request->fasilitas ?? []);
 
         if ($request->hasFile('gambar')) {
             foreach ($request->file('gambar') as $file) {
@@ -292,4 +287,3 @@ class PenginapanController extends Controller
         return back()->with('success', 'Status artikel berhasil diperbarui.');
     }
 }
-
