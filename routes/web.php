@@ -4,9 +4,10 @@ use App\Http\Controllers\Admin\PenginapanController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\PageController;
+use App\Http\Controllers\PageController; // Pastikan PageController sudah di-import
 use App\Models\User;
 use App\Models\Penginapan;
+use App\Http\Controllers\HomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,20 +17,18 @@ use App\Models\Penginapan;
 
 // == ROUTE UNTUK TAMPILAN PUBLIK / FRONTEND ==
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Perbaikan: Ubah rute home agar memanggil PageController@index
+Route::get('/', [PageController::class, 'index'])->name('home');
 
 Route::get('/penginapan', [PageController::class, 'listPenginapan'])->name('penginapan.list');
 Route::get('/penginapan/{penginapan:slug}', [PageController::class, 'detailPenginapan'])->name('penginapan.detail');
 
-
 // == ROUTE UNTUK USER YANG SUDAH LOGIN ==
 
 Route::middleware(['auth'])->group(function () {
-
+    // ... (kode di sini tidak perlu diubah) ...
     Route::get('/dashboard', function () {
-        $user = auth()->user();
+        $user = \Illuminate\Support\Facades\Auth::user();
         $totalPenginapan = 0;
         $totalUsers = 0;
         $penginapanVerifikasi = 0;
@@ -66,13 +65,11 @@ Route::middleware(['auth'])->group(function () {
 // == ROUTE KHUSUS UNTUK ADMIN PANEL ==
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // ... (kode di sini juga tidak perlu diubah) ...
     // User management CRUD
     Route::resource('users', UserController::class);
 
-    // ==========================================================
-    // RUTE BARU DITAMBAHKAN DI SINI
-    // Diletakkan sebelum resource route untuk prioritas
-    // ==========================================================
+    Route::get('/', [PageController::class, 'index'])->name('home');
     Route::post('penginapan/destroy-multiple', [PenginapanController::class, 'destroyMultiple'])->name('penginapan.destroy.multiple');
     Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
     Route::get('penginapan/gambar/{gambar}', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
@@ -82,4 +79,3 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 require __DIR__ . '/auth.php';
-
