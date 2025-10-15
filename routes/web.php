@@ -105,6 +105,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // --- Penginapan Routes ---
     Route::get('/', [PageController::class, 'index'])->name('home');
+    Route::post('penginapan/upload-image', [PenginapanController::class, 'uploadImage'])->name('penginapan.upload.image');
     Route::post('penginapan/destroy-multiple', [PenginapanController::class, 'destroyMultiple'])->name('penginapan.destroy.multiple');
     Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
     Route::get('penginapan/gambar/{gambar}', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
@@ -115,6 +116,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // --- Wisata Routes ---
     Route::post('wisata/destroy-multiple', [WisataController::class, 'destroyMultiple'])->name('wisata.destroy.multiple');
     Route::patch('wisata/{wisata}/status', [WisataController::class, 'updateStatus'])->name('wisata.status.update');
+    Route::post('wisata/upload-image', [WisataController::class, 'uploadImage'])->name('wisata.upload.image');
     Route::get('wisata/gambar/{gambar}', [WisataController::class, 'destroyGambar'])->name('wisata.gambar.destroy');
     Route::resource('wisata', WisataController::class)
         ->except(['show'])

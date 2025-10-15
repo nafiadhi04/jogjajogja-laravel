@@ -1,6 +1,6 @@
 <x-app-layout>
-    {{-- PERBAIKAN: Mengganti '$all_penginapan' menjadi '$users' --}}
-    <div class="py-12" x-data="{
+    {{-- Compact users index (UI dipadatkan, logika tetap sama) --}}
+    <div class="py-8" x-data="{
         selectedIds: [],
         selectAll: false,
         itemsOnPage: {{ $users->count() }},
@@ -14,55 +14,71 @@
         }
     }">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="p-6 bg-white rounded-lg shadow-xl">
+            <div class="p-4 bg-white rounded-md shadow">
 
-                <div class="flex items-center justify-between mb-6">
-                    <h1 class="text-2xl font-bold">Daftar User</h1>
+                <div class="flex items-center justify-between mb-3">
+                    <h1 class="text-lg font-semibold text-gray-800">Daftar User</h1>
                     <a href="{{ route('admin.users.create') }}"
-                        class="px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                        class="px-3 py-1 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700">
                         Tambah User
                     </a>
                 </div>
 
-                {{-- (Tambahkan tombol hapus massal jika diperlukan) --}}
-
-                <table class="min-w-full border border-gray-200">
-                    <thead>
-                        <tr class="bg-gray-100">
-                            {{-- (Tambahkan checkbox massal jika diperlukan) --}}
-                            <th class="px-4 py-2 border">ID</th>
-                            <th class="px-4 py-2 border">Nama</th>
-                            <th class="px-4 py-2 border">Email</th>
-                            <th class="px-4 py-2 border">Role</th>
-                            <th class="px-4 py-2 border">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($users as $user)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm border border-gray-200 table-fixed">
+                        <thead class="bg-gray-100">
                             <tr>
-                                <td class="px-4 py-2 border">{{ $user->id }}</td>
-                                <td class="px-4 py-2 border">{{ $user->name }}</td>
-                                <td class="px-4 py-2 border">{{ $user->email }}</td>
-                                <td class="px-4 py-2 border">{{ $user->role }}</td>
-                                <td class="px-4 py-2 space-x-2 border">
-                                    <a href="{{ route('admin.users.edit', $user->id) }}"
-                                        class="text-blue-600 hover:underline">
-                                        Edit
-                                    </a>
-                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
-                                        class="inline"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">
-                                            Hapus
-                                        </button>
-                                    </form>
-                                </td>
+                                <th class="w-16 px-2 py-2 text-left border">ID</th>
+                                <th class="px-2 py-2 text-left border">Nama</th>
+                                <th class="px-2 py-2 text-left border w-60">Email</th>
+                                <th class="px-2 py-2 text-left border w-28">Role</th>
+                                <th class="px-2 py-2 text-left border w-36">Aksi</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($users as $user)
+                                <tr class="odd:bg-white even:bg-gray-50">
+                                    <td class="px-2 py-2 text-sm text-gray-700 border">{{ $user->id }}</td>
+                                    <td class="px-2 py-2 text-sm font-medium text-gray-800 border">{{ $user->name }}</td>
+                                    <td class="px-2 py-2 text-sm text-gray-700 truncate border">{{ $user->email }}</td>
+                                    <td class="px-2 py-2 text-sm text-gray-700 border">
+                                        <span
+                                            class="inline-block px-2 py-0.5 text-xs font-semibold rounded-full 
+                                                {{ $user->role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ ucfirst($user->role) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-2 py-2 border">
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ route('admin.users.edit', $user->id) }}"
+                                                class="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded hover:bg-yellow-600">
+                                                Edit
+                                            </a>
+
+                                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
+                                                class="inline"
+                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Jika $users adalah paginator, tampilkan links (pakai kelas compact) --}}
+                @if(method_exists($users, 'links'))
+                    <div class="mt-3">
+                        {{ $users->links() }}
+                    </div>
+                @endif
 
             </div>
         </div>

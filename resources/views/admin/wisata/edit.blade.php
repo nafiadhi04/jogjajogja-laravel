@@ -193,9 +193,12 @@
         <script>
             function formManager() {
                 return {
+                    // State untuk gambar yang baru akan diupload
                     galleryFiles: [],
                     galleryPreviews: [],
-                    existingImages: @json($wisata->gambar || []),
+                    // State untuk gambar yang sudah ada
+                    existingImages: @json($wisata->gambar),
+                    successMessage: '',
 
                     triggerFileInput() { this.$refs.galleryInput.click(); },
                     handleFileSelection(event) {
@@ -218,18 +221,23 @@
                         this.$refs.galleryInput.files = dataTransfer.files;
                     },
                     deleteExistingImage(id, index) {
-                        if (!confirm('Anda yakin ingin menghapus gambar ini?')) return;
-                        fetch(`/admin/wisata/gambar/${id}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            }
-                        }).then(r => r.json()).then(data => {
-                            if (data.success) {
-                                this.existingImages.splice(index, 1);
-                            }
-                        }).catch(e => console.error(e));
+                        if (confirm('Anda yakin ingin menghapus gambar ini?')) {
+                            fetch(`/admin/wisata/gambar/${id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'Accept': 'application/json'
+                                }
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        this.existingImages.splice(index, 1);
+                                        this.successMessage = data.success;
+                                        setTimeout(() => this.successMessage = '', 3000);
+                                    }
+                                }).catch(error => console.error('Error:', error));
+                        }
                     }
                 }
             }
@@ -253,20 +261,76 @@
                 var form = document.querySelector('form');
                 var charCount = document.querySelector('#char-count');
                 deskripsiInput.value = quill.root.innerHTML;
-                if (charCount) charCount.textContent = quill.getText().trim().length + ' / 5000';
+                if (charCount) {
+                    charCount.textContent = quill.getText().trim().length + ' / 5000';
+                }
 
                 quill.on('text-change', function () {
-                    let text = quill.getText().trim();
+                    let text = quill.root.innerHTML;
                     let length = text.length;
-                    deskripsiInput.value = quill.root.innerHTML;
+                    deskripsiInput.value = text;
                     if (charCount) {
                         charCount.textContent = length + ' / 5000';
-                        if (length > 5000) charCount.classList.add('text-red-500'); else charCount.classList.remove('text-red-500');
+                        if (length > 5000) { charCount.classList.add('text-red-500'); } else { charCount.classList.remove('text-red-500'); }
                     }
                 });
 
                 form.addEventListener('submit', function (e) {
                     if (quill.root.innerHTML === '<p><br></p>') { deskripsiInput.value = ''; } else { deskripsiInput.value = quill.root.innerHTML; }
+                });
+
+                // Fungsi untuk upload gambar di dalam editor Quill
+                function selectLocalImage() {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'file');
+                    input.setAttribute('accept', 'image/*');
+                    input.click();
+
+                    input.onchange = () => {
+                        const file = input.files[0];
+                        if (/^image\//.test(file.type)) {
+                            saveToServer(file);
+                        } else {
+                            alert('Anda hanya bisa mengupload file gambar.');
+                        }
+                    };
+                }
+
+                function saveToServer(file) {
+                    const fd = new FormData();
+                    fd.append('image', file);
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                    fetch("{{ route('admin.wisata.upload.image') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: fd
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.url) {
+                                insertToEditor(result.url);
+                            } else {
+                                alert('Upload gagal: ' + (result.message || 'Error tidak diketahui'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Terjadi kesalahan saat mengupload gambar.');
+                        });
+                }
+
+                function insertToEditor(url) {
+                    const range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, 'image', url);
+                    quill.setSelection(range.index + 1);
+                }
+
+                quill.getModule('toolbar').addHandler('image', () => {
+                    selectLocalImage();
                 });
             });
         </script>

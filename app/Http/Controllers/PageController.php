@@ -22,7 +22,7 @@ class PageController extends Controller
             ->with(['gambar'])
             ->limit(12)
             ->get();
-       
+
         return view('welcome', compact('penginapan_list'));
     }
 
