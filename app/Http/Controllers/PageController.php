@@ -22,7 +22,7 @@ class PageController extends Controller
             ->with(['gambar'])
             ->limit(12)
             ->get();
-       
+        
         return view('welcome', compact('penginapan_list'));
     }
 
@@ -34,12 +34,39 @@ class PageController extends Controller
         // Muat relasi 'fasilitas' dan 'gambar' di awal query untuk semua data.
         $query = Penginapan::query()->where('status', 'diterima')->with(['fasilitas', 'gambar']);
 
-        // Filter penginapan berdasarkan input pencarian
+        // Filter penginapan berdasarkan input pencarian yang ditingkatkan
         $query->when($request->search, function ($q, $search) {
-            return $q->where('nama', 'like', "%{$search}%")
-                ->orWhere('deskripsi', 'like', "%{$search}%");
+            // Hapus spasi berlebih untuk pencarian yang lebih baik
+            $searchTerm = trim($search);
+            
+            // Daftar tipe penginapan yang umum
+            $commonTypes = ['villa', 'hotel', 'homestay', 'guest house', 'guesthouse', 'resort', 'apartment', 'kost'];
+            
+            // Cek apakah pencarian adalah nama tipe penginapan
+            $searchLower = strtolower($searchTerm);
+            $isTypeSearch = false;
+            foreach ($commonTypes as $type) {
+                if (stripos($type, $searchLower) !== false || stripos($searchLower, $type) !== false) {
+                    $isTypeSearch = true;
+                    break;
+                }
+            }
+            
+            return $q->where(function($query) use ($searchTerm, $isTypeSearch) {
+                // Jika pencarian adalah tipe, prioritaskan kolom tipe dan nama
+                if ($isTypeSearch) {
+                    $query->where('tipe', 'like', "%{$searchTerm}%")
+                        ->orWhere('nama', 'like', "%{$searchTerm}%");
+                } else {
+                    // Pencarian normal di semua kolom
+                    $query->where('nama', 'like', "%{$searchTerm}%")
+                        ->orWhere('deskripsi', 'like', "%{$searchTerm}%")
+                        ->orWhere('kota', 'like', "%{$searchTerm}%")
+                        ->orWhere('tipe', 'like', "%{$searchTerm}%");
+                }
+            });
         });
-       
+        
         $query->when($request->tipe, fn($q, $tipe) => $q->where('tipe', $tipe));
         $query->when($request->kota, fn($q, $kota) => $q->where('kota', $kota));
         $query->when($request->periode, fn($q, $periode) => $q->where('periode_harga', $periode));
@@ -47,7 +74,7 @@ class PageController extends Controller
         $query->when($request->harga_max, fn($q, $harga_max) => $q->where('harga', '<=', $harga_max));
 
         $allowedSorts = ['views', 'created_at', 'harga', 'nama'];
-       
+        
         $sortBy = $request->input('sort_by');
         if (!in_array($sortBy, $allowedSorts)) {
             $sortBy = 'views';
@@ -107,9 +134,36 @@ class PageController extends Controller
             ->where('status', 'diterima')
             ->with(['fasilitas', 'gambar']);
 
+        // Filter wisata berdasarkan input pencarian yang ditingkatkan
         $query->when($request->search, function ($q, $search) {
-            return $q->where('nama', 'like', "%{$search}%")
-                ->orWhere('deskripsi', 'like', "%{$search}%");
+            $searchTerm = trim($search);
+            
+            // Daftar tipe wisata yang umum
+            $commonTypes = ['pantai', 'gunung', 'museum', 'taman', 'candi', 'air terjun', 'kuliner', 'belanja', 'budaya', 'sejarah'];
+            
+            // Cek apakah pencarian adalah nama tipe wisata
+            $searchLower = strtolower($searchTerm);
+            $isTypeSearch = false;
+            foreach ($commonTypes as $type) {
+                if (stripos($type, $searchLower) !== false || stripos($searchLower, $type) !== false) {
+                    $isTypeSearch = true;
+                    break;
+                }
+            }
+            
+            return $q->where(function($query) use ($searchTerm, $isTypeSearch) {
+                // Jika pencarian adalah tipe, prioritaskan kolom tipe dan nama
+                if ($isTypeSearch) {
+                    $query->where('tipe', 'like', "%{$searchTerm}%")
+                        ->orWhere('nama', 'like', "%{$searchTerm}%");
+                } else {
+                    // Pencarian normal di semua kolom
+                    $query->where('nama', 'like', "%{$searchTerm}%")
+                        ->orWhere('deskripsi', 'like', "%{$searchTerm}%")
+                        ->orWhere('kota', 'like', "%{$searchTerm}%")
+                        ->orWhere('tipe', 'like', "%{$searchTerm}%");
+                }
+            });
         });
 
         $query->when($request->tipe, fn($q, $tipe) => $q->where('tipe', $tipe));
@@ -153,6 +207,30 @@ class PageController extends Controller
             ->limit(4)
             ->get();
 
-        return view('frontend.wisata.detail', compact('wisata', 'wisata_terkait'));
+        // 1. Ambil salah satu data penginapan terkait/terdekat (Misalnya yang paling populer)
+        // Kita gunakan kota yang sama dan ambil yang paling banyak dilihat.
+        $penginapan_terkait = Penginapan::where('status', 'diterima')
+            ->where('kota', $wisata->kota)
+            ->with(['author']) // Eager load author untuk info di sidebar
+            ->orderByDesc('views')
+            ->first(); // Ambil hanya satu data
+
+        // 2. Ambil data penginapan rekomendasi (untuk blok rekomendasi di sidebar)
+        $penginapan_rekomendasi = Penginapan::where('status', 'diterima')
+            ->where('is_rekomendasi', true)
+            ->has('gambar')
+            ->with(['gambar'])
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
+
+        return view('frontend.wisata.detail', [
+            'wisata' => $wisata,
+            'wisata_terkait' => $wisata_terkait,
+            // Variabel untuk sidebar
+            'penginapan' => $penginapan_terkait,
+            'penginapan_rekomendasi' => $penginapan_rekomendasi,
+        ]);
     }
 }

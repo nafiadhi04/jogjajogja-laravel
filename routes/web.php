@@ -36,7 +36,7 @@ Route::get('/wisata/{wisata:slug}', [PageController::class, 'detailWisata'])->na
 Route::middleware(['auth'])->group(function () {
     // ... (kode di sini tidak perlu diubah) ...
     Route::get('/dashboard', function () {
-        $user = auth()->user();
+        $user = \Illuminate\Support\Facades\Auth::user();
 
         // Inisialisasi variabel
         $totalPenginapan = 0;

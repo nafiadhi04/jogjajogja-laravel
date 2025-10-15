@@ -1,7 +1,7 @@
 <x-guest-layout>
     {{-- Hero Section dengan Background Image --}}
     <div class="relative bg-center bg-no-repeat bg-cover"
-        style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507613621237-7a47e7a2365e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');">
+        style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://asset.kompas.com/crops/Y5S_hd-Jn2cuaKYtOfN4ASXnM2Y=/0x0:1000x667/1200x800/data/photo/2022/03/13/622e12c85befb.jpg');">
 
         <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-green-500/20"></div>
 
