@@ -17,7 +17,7 @@
         }
     }">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="p-4 overflow-hidden bg-white rounded-lg shadow">
+            <div class="p-4 overflow-hidden bg-white rounded-md shadow">
 
                 {{-- Header Halaman dengan Tombol Aksi --}}
                 <div class="flex flex-col mb-4 md:flex-row md:items-center md:justify-between">
@@ -81,6 +81,8 @@
                                 <th class="w-10 px-2 py-2 border">
                                     <input type="checkbox" x-model="selectAll" @click="toggleSelectAll" class="rounded">
                                 </th>
+                                {{-- KOLOM BARU --}}
+                                <th class="w-12 px-2 py-2 text-center border">No.</th>
                                 <th class="px-2 py-2 text-left border w-28">Thumbnail</th>
                                 <th class="px-2 py-2 text-left border">Nama Artikel</th>
                                 @if(Auth::user()->role === 'admin')
@@ -98,7 +100,11 @@
                                         <input type="checkbox" value="{{ $item->id }}" x-model="selectedIds"
                                             @change="updateSelectAllState" class="rounded item-checkbox">
                                     </td>
-                                    <td class="px-2 py-2 border">
+                                    <td class="px-2 py-2 text-center align-middle border">
+                                        {{-- Rumus untuk penomoran paginasi yang benar --}}
+                                        {{ ($all_penginapan->currentPage() - 1) * $all_penginapan->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-2 py-2 align-middle border">
                                         <img src="{{ asset('storage/' . $item->thumbnail) }}" alt="{{ $item->nama }}"
                                             class="object-cover w-20 h-12 rounded-sm">
                                     </td>
@@ -115,7 +121,7 @@
                                         @if($item->status == 'revisi' && $item->catatan_revisi)
                                             <div
                                                 class="max-w-xs px-2 py-1 mt-2 text-xs text-red-800 break-words rounded bg-red-50">
-                                                <strong>Catatan:</strong> {{ Str::limit($item->catatan_revisi, 120) }}
+                                                <strong>Catatan Revisi:</strong> {{ Str::limit($item->catatan_revisi, 120) }}
                                             </div>
                                         @endif
                                     </td>
@@ -165,22 +171,22 @@
 
                                         @can('admin')
                                             <div x-show="modalOpen" x-cloak
-                                                class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                                class="fixed inset-0 z-50 flex items-center justify-center p-3">
                                                 <div x-show="modalOpen" x-transition
                                                     class="fixed inset-0 bg-gray-500 bg-opacity-60"></div>
                                                 <div x-show="modalOpen" x-transition @click.outside="modalOpen = false"
-                                                    class="relative w-full max-w-md bg-white rounded-lg shadow-lg">
+                                                    class="relative w-full max-w-md bg-white rounded-md shadow-lg">
                                                     <form action="{{ route('admin.penginapan.status.update', $item) }}"
                                                         method="POST">
                                                         @csrf @method('PATCH')
                                                         <div class="p-4">
-                                                            <h3 class="text-base font-semibold text-gray-900">Update Status:
+                                                            <h3 class="text-base font-medium text-gray-900">Update Status untuk:
                                                                 {{ $item->nama }}</h3>
                                                             <div class="mt-3 space-y-3 text-left"
                                                                 x-data="{ status: 'diterima' }">
                                                                 <div>
                                                                     <label
-                                                                        class="block text-sm font-medium text-gray-700">Status
+                                                                        class="block text-xs font-medium text-gray-700">Status
                                                                         Baru</label>
                                                                     <select name="status" x-model="status"
                                                                         class="block w-full mt-1 text-sm border-gray-300 rounded">
@@ -190,18 +196,18 @@
                                                                 </div>
                                                                 <div x-show="status === 'revisi'">
                                                                     <label for="catatan_revisi"
-                                                                        class="block text-sm font-medium text-gray-700">Catatan
+                                                                        class="block text-xs font-medium text-gray-700">Catatan
                                                                         Revisi (Wajib)</label>
                                                                     <textarea name="catatan_revisi" rows="3"
                                                                         class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="flex justify-end px-4 py-3 space-x-2 bg-gray-50">
+                                                        <div class="flex justify-end px-3 py-2 space-x-2 bg-gray-50">
                                                             <button type="button" @click="modalOpen = false"
-                                                                class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button>
+                                                                class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button>
                                                             <button type="submit"
-                                                                class="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">Simpan</button>
+                                                                class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">Simpan</button>
                                                         </div>
                                                     </form>
                                                 </div>

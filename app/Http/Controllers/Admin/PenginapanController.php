@@ -217,7 +217,25 @@ class PenginapanController extends Controller
         return redirect()->route('admin.penginapan.index')
             ->with('success', 'Artikel penginapan berhasil dihapus!');
     }
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
 
+        if ($request->hasFile('image')) {
+            // Simpan gambar ke folder 'deskripsi_images' di dalam public storage
+            $path = $request->file('image')->store('deskripsi_images', 'public');
+
+            // Dapatkan URL publik dari file yang baru disimpan
+            $url = Storage::disk('public')->url($path);
+
+            // Kembalikan URL dalam format JSON agar bisa dibaca oleh JavaScript
+            return response()->json(['url' => $url]);
+        }
+
+        return response()->json(['error' => 'Gagal mengupload gambar.'], 400);
+    }
     /**
      * Menghapus beberapa artikel yang dipilih secara massal.
      */

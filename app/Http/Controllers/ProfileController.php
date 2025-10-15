@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage; // <-- Import Storage
+use Illuminate\Support\Str; // <-- Import Str
 
 class ProfileController extends Controller
 {
@@ -26,13 +28,42 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        // ==========================================================
+        // LOGIKA BARU UNTUK UPLOAD FOTO PROFIL
+        // ==========================================================
+        if ($request->filled('profile_photo')) {
+            // Hapus foto lama jika ada
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            // Proses gambar base64 dari Cropper.js
+            $folderPath = 'profile-photos/';
+            $imageData = $request->input('profile_photo');
+
+            // Ekstrak data gambar dari string base64
+            list($type, $imageData) = explode(';', $imageData);
+            list(, $imageData) = explode(',', $imageData);
+            $imageData = base64_decode($imageData);
+
+            // Buat nama file yang unik
+            $imageName = $folderPath . Str::random(40) . '.png';
+
+            // Simpan file ke storage
+            Storage::disk('public')->put($imageName, $imageData);
+
+            // Simpan path ke database
+            $user->profile_photo_path = $imageName;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -47,6 +78,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Hapus foto profil dari storage sebelum menghapus user
+        if ($user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+        }
 
         Auth::logout();
 

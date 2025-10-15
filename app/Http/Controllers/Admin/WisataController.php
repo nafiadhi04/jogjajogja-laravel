@@ -198,6 +198,26 @@ class WisataController extends Controller
             ->with('success', 'Artikel wisata berhasil dihapus!');
     }
 
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Simpan gambar ke folder 'deskripsi_images_wisata'
+            $path = $request->file('image')->store('deskripsi_images_wisata', 'public');
+
+            $url = Storage::disk('public')->url($path);
+
+            // Kembalikan URL dalam format JSON agar bisa dibaca oleh JavaScript
+            return response()->json(['url' => $url]);
+        }
+
+        return response()->json(['error' => 'Gagal mengupload gambar.'], 400);
+    }
+
+
     public function destroyMultiple(Request $request)
     {
         $validated = $request->validate([
