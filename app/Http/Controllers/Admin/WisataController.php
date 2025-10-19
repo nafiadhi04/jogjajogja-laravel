@@ -7,13 +7,15 @@ use App\Models\Fasilitas;
 use App\Models\GambarWisata;
 use App\Models\User;
 use App\Models\Wisata;
+use App\Models\Penginapan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class WisataController extends Controller
 {
     /**
@@ -24,7 +26,7 @@ class WisataController extends Controller
         $user = Auth::user();
         $query = Wisata::query();
 
-        if ($user->role === 'member') {
+        if ($user->role !== 'admin') {
             $query->where('user_id', $user->id);
         }
 
@@ -45,7 +47,9 @@ class WisataController extends Controller
 
         $all_wisata = $query->with('author')->latest()->paginate(10)->withQueryString();
 
-        return view('admin.wisata.index', compact('all_wisata'));
+        $authors = User::whereIn('role', ['admin', 'member', 'silver', 'gold', 'platinum'])->orderBy('name')->get();
+
+        return view('admin.wisata.index', compact('all_wisata', 'authors'));
     }
 
     /**
@@ -53,6 +57,19 @@ class WisataController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
+
+        if ($user->role !== 'admin') {
+            $limits = ['silver' => 1, 'gold' => 10, 'platinum' => 50, 'member' => 1];
+            $limit = $limits[$user->role] ?? 0;
+
+            $currentCount = Wisata::where('user_id', $user->id)->count() + Penginapan::where('user_id', $user->id)->count();
+
+            if ($currentCount >= $limit) {
+                return back()->with('error', 'Anda telah mencapai batas maksimal ' . $limit . ' artikel untuk tipe akun Anda.');
+            }
+        }
+
         $fasilitas = Fasilitas::all();
         return view('admin.wisata.create', compact('fasilitas'));
     }
@@ -65,7 +82,9 @@ class WisataController extends Controller
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100', 'unique:wisatas,nama'],
             'deskripsi' => ['required', 'string', 'max:5000'],
-            'lokasi' => ['nullable', 'url'],
+            'lokasi' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'harga_tiket' => ['required', 'numeric', 'min:0'],
             'tipe' => ['required', 'string', 'max:100'],
             'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
@@ -82,6 +101,8 @@ class WisataController extends Controller
             'slug' => Str::slug($validated['nama']),
             'deskripsi' => $validated['deskripsi'],
             'lokasi' => $validated['lokasi'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
             'harga_tiket' => $validated['harga_tiket'],
             'tipe' => $validated['tipe'],
             'kota' => $validated['kota'],
@@ -110,7 +131,7 @@ class WisataController extends Controller
     public function edit(Wisata $wisata)
     {
         $user = Auth::user();
-        if ($user->role === 'admin' || ($wisata->user_id === $user->id && $wisata->status === 'revisi')) {
+        if ($user->role === 'admin' || $wisata->user_id === $user->id) {
             $fasilitas = Fasilitas::all();
             return view('admin.wisata.edit', compact('wisata', 'fasilitas'));
         }
@@ -129,8 +150,10 @@ class WisataController extends Controller
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255', Rule::unique('wisatas')->ignore($wisata->id)],
             'deskripsi' => ['required', 'string', 'max:5000'],
-            'lokasi' => ['nullable', 'url'],
-            'harga_tiket' => ['required', 'integer', 'min:0'],
+            'lokasi' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'harga_tiket' => ['required', 'numeric', 'min:0'],
             'tipe' => ['required', 'string', 'max:100'],
             'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
@@ -145,6 +168,8 @@ class WisataController extends Controller
             'slug' => Str::slug($request->nama),
             'deskripsi' => $request->deskripsi,
             'lokasi' => $request->lokasi,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'harga_tiket' => $request->harga_tiket,
             'tipe' => $request->tipe,
             'kota' => $request->kota,
@@ -160,7 +185,7 @@ class WisataController extends Controller
             $wisata->update(['thumbnail' => $thumbnailPath]);
         }
 
-        $wisata->fasilitas()->sync($request->fasilitas);
+        $wisata->fasilitas()->sync($request->fasilitas ?? []);
 
         if ($request->hasFile('gambar')) {
             foreach ($request->file('gambar') as $file) {
@@ -172,7 +197,6 @@ class WisataController extends Controller
         return redirect()->route('admin.wisata.index')
             ->with('success', 'Artikel wisata berhasil diperbarui dan dikirim ulang untuk verifikasi.');
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -260,22 +284,89 @@ class WisataController extends Controller
         return back()->with('success_gambar', 'Gambar galeri berhasil dihapus!');
     }
 
-    public function updateStatus(Request $request, Wisata $wisata)
+    public function updateStatus(Request $request, $identifier)
+    {
+        $data = $request->validate([
+            'status' => 'required|string|in:diterima,verifikasi,revisi',
+            'catatan_revisi' => 'nullable|string',
+        ]);
+
+        // Resolve model: 3 kemungkinan
+        // 1) $identifier sudah instance Wisata (happens if route-model-binding used and method typed differently)
+        if ($identifier instanceof Wisata) {
+            $wisata = $identifier;
+        } else {
+            $wisata = null;
+
+            // 2) numeric id
+            if (is_numeric($identifier)) {
+                $wisata = Wisata::where('id', $identifier)->first();
+            }
+
+            // 3) try by slug if not found by id
+            if (!$wisata) {
+                $wisata = Wisata::where('slug', $identifier)->first();
+            }
+        }
+
+        if (!$wisata) {
+            return response()->json(['message' => "Wisata tidak ditemukan untuk identifier: {$identifier}"], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // set status & catatan_revisi sesuai keadaan
+            $wisata->status = $data['status'];
+
+            if ($data['status'] === 'revisi') {
+                $wisata->catatan_revisi = $data['catatan_revisi'] ?? null;
+            } else {
+                // clear revision note for non-revisi
+                $wisata->catatan_revisi = null;
+            }
+
+            $wisata->save();
+
+            DB::commit();
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Status berhasil diperbarui.', 'status' => $wisata->status]);
+            }
+
+            return redirect()->back()->with('success', 'Status berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            // Pastikan facade Log sudah di-import di bagian atas file:
+            // use Illuminate\Support\Facades\Log;
+            Log::error('updateStatus failed for wisata', [
+                'identifier' => $identifier,
+                'request' => $request->all(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Gagal menyimpan status. Periksa log server.', 'error' => $e->getMessage()], 500);
+            }
+
+            return redirect()->back()->with('error', 'Gagal menyimpan status. Periksa log server.');
+        }
+    }
+    public function updateAuthor(Request $request, Wisata $wisata)
     {
         if (!Gate::allows('admin')) {
             abort(403);
         }
 
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['diterima', 'revisi'])],
-            'catatan_revisi' => ['nullable', 'string', 'max:1000', 'required_if:status,revisi'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $wisata->status = $validated['status'];
-        $wisata->catatan_revisi = $validated['catatan_revisi'] ?? null;
+        $wisata->user_id = $validated['user_id'];
         $wisata->save();
 
-        return back()->with('success', 'Status artikel berhasil diperbarui.');
+        return back()->with('success', 'Author artikel berhasil diperbarui.');
     }
 }
-

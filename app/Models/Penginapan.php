@@ -121,54 +121,14 @@ class Penginapan extends Model
         return $out;
     }
 
-    public function getViewableMapUrlAttribute()
+    public function getViewableMapUrlAttribute(): string
     {
-        $input = (string) $this->lokasi;
-        if (empty($input))
-            return null;
-
-        // jika input sudah merupakan place URL lengkap, kembalikan langsung
-        if (preg_match('#https?://(www\.)?google\.[^/]+/maps/place/#', $input)) {
-            return $input;
+        // Jika latitude dan longitude ada di database, buat URL dari sana
+        if ($this->latitude && $this->longitude) {
+            return "https://www.google.com/maps/search/?api=1&query={$this->latitude},{$this->longitude}";
         }
 
-        // parsing token dari embed / url
-        $tokens = $this->extractEmbedTokens($input);
-
-        $lat = $tokens['lat'];
-        $lon = $tokens['lon'];
-        $meters = $tokens['meters'];
-        $name = $tokens['name'];
-
-        // jika punya lat & lon, buat URL place
-        if ($lat && $lon) {
-            // prefer nama bila ada
-            if ($name) {
-                // encode name untuk path /place/ — Google menerima + sebagai spasi di path setelah /place/
-                $encodedName = str_replace('%20', '+', rawurlencode($name));
-
-                // jika ada nilai meters, gunakan format ",{meters}m" seperti contoh; kalau tidak, pakai 17z (zoom)
-                if ($meters && $meters > 0) {
-                    // gunakan meters langsung (bulatkan ke integer)
-                    $metersPart = round($meters) . 'm';
-                    return "https://www.google.com/maps/place/{$encodedName}/@{$lat},{$lon},{$metersPart}";
-                }
-
-                // fallback: gunakan zoom 17z
-                return "https://www.google.com/maps/place/{$encodedName}/@{$lat},{$lon},17z";
-            }
-
-            // bila tidak ada nama, fallback ke search by coords (paling andal)
-            return "https://www.google.com/maps/search/?api=1&query={$lat},{$lon}";
-        }
-
-        // jika tak bisa parse, coba gunakan token !1s sebagai query teks
-        if (!empty($tokens['place_token'])) {
-            $q = rawurlencode(str_replace('+', ' ', $tokens['place_token']));
-            return "https://www.google.com/maps/search/?api=1&query={$q}";
-        }
-
-        // last resort: kembalikan input (embed) — ini tidak bisa dibuka di tab biasa tanpa embed iframe
-        return $input;
+        // Jika tidak ada, kembalikan '#' sebagai fallback agar tidak error
+        return '#';
     }
 }

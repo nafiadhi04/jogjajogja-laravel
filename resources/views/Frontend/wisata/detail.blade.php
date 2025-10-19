@@ -437,7 +437,7 @@
             {{-- Header Wisata --}}
             <div class="mb-6">
                 <h1 class="text-4xl font-extrabold tracking-tight text-gray-900">{{ $wisata->nama }}</h1>
-                <div class="flex flex-wrap md:flex-nowrap items-center space-x-8">
+                <div class="flex flex-wrap items-center space-x-8 md:flex-nowrap">
                     <p class="mt-2 text-3xl font-bold text-teal-600">
                         Rp {{ number_format($wisata->harga, 0, ',', '.') }}
                         <span class="text-lg font-normal text-gray-600">/ {{ $wisata->periode_harga }}</span>
@@ -467,8 +467,8 @@
                         SECTION 2: TABEL HARGA
                         =============================================== --}}
                     @if(isset($wisata->harga_weekend) || isset($wisata->harga_high_season))
-                    <div class="mb-8 p-6 bg-white rounded-lg shadow-sm overflow-x-auto">
-                        <table class="price-table min-w-full">
+                    <div class="p-6 mb-8 overflow-x-auto bg-white rounded-lg shadow-sm">
+                        <table class="min-w-full price-table">
                             <thead>
                                 <tr>
                                     <th>Periode</th>
@@ -521,7 +521,7 @@
                     {{-- =============================================== 
                         SECTION 4: FASILITAS
                         =============================================== --}}
-                    <div class="mb-8 p-6 bg-white rounded-lg shadow-sm">
+                    <div class="p-6 mb-8 bg-white rounded-lg shadow-sm">
                         <h3 class="mb-4 text-2xl font-bold text-gray-800">
                             <span class="text-teal-600">🏨</span> Fasilitas
                         </h3>
@@ -584,9 +584,12 @@
                             <iframe src="{{ $wisata->lokasi }}" allowfullscreen="" loading="lazy"></iframe>
                         </div>
                         
-                        <a href="{{ $wisata->lokasi }}" target="_blank" class="map-button">
-                            BUKA DI GOOGLE MAPS <span>↗</span>
-                        </a>
+                            @if($wisata->latitude && $wisata->longitude)
+                                <a href="{{ $wisata->viewable_map_url }}" target="_blank"
+                                    class="inline-block px-4 py-2 mt-4 text-white transition rounded bg-cyan-600 hover:bg-cyan-700">
+                                    <span class="text-white">↗</span> BUKA DI GOOGLE MAPS
+                                </a>
+                            @endif
                     </section>
                 </div>
                 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
+use App\Providers\RouteServiceProvider; // <-- PERBAIKAN UTAMA DI SINI
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,7 +40,7 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'pending', // <-- PERUBAHAN UTAMA DI SINI
+            'role' => 'pending', // Peran default untuk pengguna baru
         ]);
 
         event(new Registered($user));

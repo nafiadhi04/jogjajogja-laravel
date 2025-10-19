@@ -3,32 +3,37 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Fasilitas;
 use App\Models\Penginapan;
+use App\Models\Wisata;
 use App\Models\GambarPenginapan;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class PenginapanController extends Controller
 {
     /**
-     * Menampilkan daftar artikel dengan filter pencarian tunggal.
+     * Menampilkan daftar artikel dengan filter.
      */
     public function index(Request $request)
     {
         $user = Auth::user();
         $query = Penginapan::query();
 
-        if ($user->role === 'member') {
+        // non-admin hanya melihat miliknya sendiri
+        if ($user->role !== 'admin') {
             $query->where('user_id', $user->id);
         }
 
-        // Logika filter pencarian tunggal
         $query->when($request->search, function ($q, $search) use ($user) {
             return $q->where(function ($subQuery) use ($search, $user) {
                 $subQuery->where('nama', 'like', "%{$search}%")
@@ -36,7 +41,6 @@ class PenginapanController extends Controller
                     ->orWhere('tipe', 'like', "%{$search}%")
                     ->orWhere('status', 'like', "%{$search}%");
 
-                // Hanya admin yang bisa mencari berdasarkan nama author
                 if ($user->role === 'admin') {
                     $subQuery->orWhereHas('author', function ($authorQuery) use ($search) {
                         $authorQuery->where('name', 'like', "%{$search}%");
@@ -47,32 +51,58 @@ class PenginapanController extends Controller
 
         $all_penginapan = $query->with('author')->latest()->paginate(10)->withQueryString();
 
-        return view('admin.penginapan.index', compact('all_penginapan'));
+        $authors = User::whereIn('role', ['admin', 'member', 'silver', 'gold', 'platinum'])
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.penginapan.index', compact('all_penginapan', 'authors'));
     }
 
     /**
-     * Menampilkan form untuk membuat artikel baru.
+     * Menampilkan form untuk membuat artikel baru dengan pengecekan batasan.
      */
     public function create()
     {
-        $fasilitas = Fasilitas::all();
+        $user = Auth::user();
+
+        // jika bukan admin, periksa batas jumlah artikel berdasarkan role
+        if ($user->role !== 'admin') {
+            $limits = ['silver' => 1, 'gold' => 10, 'platinum' => 50, 'member' => 1];
+            $limit = $limits[$user->role] ?? 0;
+
+            $currentCount = Penginapan::where('user_id', $user->id)->count() + Wisata::where('user_id', $user->id)->count();
+
+            if ($currentCount >= $limit) {
+                return redirect()->back()
+                    ->with('error', 'Anda telah mencapai batas maksimal ' . $limit . ' artikel untuk tipe akun Anda.');
+            }
+        }
+
+        // pastikan fallback bila model fasilitas belum ada
+        try {
+            $fasilitas = Fasilitas::orderBy('nama')->get();
+        } catch (\Throwable $e) {
+            Log::warning('Fasilitas model not available: ' . $e->getMessage());
+            $fasilitas = collect([]);
+        }
+
         return view('admin.penginapan.create', compact('fasilitas'));
     }
 
     /**
-     * Menyimpan artikel baru dengan status default 'verifikasi'.
+     * Menyimpan artikel baru.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:100', 'unique:penginapans,nama'],
             'deskripsi' => ['required', 'string', 'max:5000'],
-            'lokasi' => ['nullable', 'url'],
-            'harga' => ['required', 'integer', 'min:0'],
+            'lokasi' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'harga' => ['required', 'numeric', 'min:0'],
             'periode_harga' => ['required', 'string'],
-            // gunakan aturan tipe yang lebih lengkap
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
-            // gunakan daftar kota yang lebih lengkap (mis. "Kota Yogyakarta")
             'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
             'thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
@@ -81,26 +111,19 @@ class PenginapanController extends Controller
             'gambar.*' => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
         ]);
 
-        $slug = Str::slug($validated['nama']);
-        $originalSlug = $slug;
-        $count = 1;
-        while (Penginapan::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $count++;
-        }
-
-        $thumbnailPath = $request->file('thumbnail')->store('thumbnails_penginapan', 'public');
-
         $penginapan = Penginapan::create([
             'user_id' => Auth::id(),
             'nama' => $validated['nama'],
-            'slug' => $slug,
+            'slug' => Str::slug($validated['nama']),
             'deskripsi' => $validated['deskripsi'],
             'lokasi' => $validated['lokasi'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
             'harga' => $validated['harga'],
             'periode_harga' => $validated['periode_harga'],
             'tipe' => $validated['tipe'],
             'kota' => $validated['kota'],
-            'thumbnail' => $thumbnailPath,
+            'thumbnail' => $request->file('thumbnail')->store('thumbnails_penginapan', 'public'),
             'status' => 'verifikasi',
         ]);
 
@@ -120,12 +143,12 @@ class PenginapanController extends Controller
     }
 
     /**
-     * Menampilkan form edit dengan pengecekan hak akses.
+     * Menampilkan form edit.
      */
     public function edit(Penginapan $penginapan)
     {
         $user = Auth::user();
-        if ($user->role === 'admin' || ($penginapan->user_id === $user->id && $penginapan->status === 'revisi')) {
+        if ($user->role === 'admin' || $penginapan->user_id === $user->id) {
             $fasilitas = Fasilitas::all();
             return view('admin.penginapan.edit', compact('penginapan', 'fasilitas'));
         }
@@ -133,7 +156,7 @@ class PenginapanController extends Controller
     }
 
     /**
-     * Mengupdate artikel dan mengembalikan statusnya ke 'verifikasi'.
+     * Mengupdate artikel.
      */
     public function update(Request $request, Penginapan $penginapan)
     {
@@ -144,12 +167,12 @@ class PenginapanController extends Controller
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255', Rule::unique('penginapans')->ignore($penginapan->id)],
             'deskripsi' => ['required', 'string', 'max:5000'],
-            'lokasi' => ['nullable', 'url'],
-            'harga' => ['required', 'integer', 'min:0'],
+            'lokasi' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'harga' => ['required', 'numeric', 'min:0'],
             'periode_harga' => ['required', 'string'],
-            // gunakan aturan tipe yang lebih lengkap
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
-            // gunakan daftar kota yang lebih lengkap
             'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
@@ -163,6 +186,8 @@ class PenginapanController extends Controller
             'slug' => Str::slug($request->nama),
             'deskripsi' => $request->deskripsi,
             'lokasi' => $request->lokasi,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'harga' => $request->harga,
             'periode_harga' => $request->periode_harga,
             'tipe' => $request->tipe,
@@ -179,7 +204,6 @@ class PenginapanController extends Controller
             $penginapan->update(['thumbnail' => $thumbnailPath]);
         }
 
-        // Pastikan sinkronisasi fasilitas aman jika tidak ada input fasilitas
         $penginapan->fasilitas()->sync($request->fasilitas ?? []);
 
         if ($request->hasFile('gambar')) {
@@ -192,6 +216,7 @@ class PenginapanController extends Controller
         return redirect()->route('admin.penginapan.index')
             ->with('success', 'Artikel berhasil diperbarui dan dikirim ulang untuk verifikasi.');
     }
+
 
     /**
      * Menghapus satu artikel.
@@ -287,21 +312,93 @@ class PenginapanController extends Controller
     /**
      * Mengupdate status artikel (terima atau revisi).
      */
-    public function updateStatus(Request $request, Penginapan $penginapan)
+    /**
+     * Update status penginapan (menerima identifier yang bisa id atau slug)
+     */
+    public function updateStatus(Request $request, $identifier)
     {
+        // validasi input minimal
+        $data = $request->validate([
+            'status' => 'required|string|in:diterima,verifikasi,revisi',
+            'catatan_revisi' => 'nullable|string',
+        ]);
+
+        // cari model: coba numeric id dulu, lalu slug
+        $penginapan = null;
+        if (is_numeric($identifier)) {
+            $penginapan = Penginapan::where('id', $identifier)->first();
+        }
+        if (!$penginapan) {
+            $penginapan = Penginapan::where('slug', $identifier)->first();
+        }
+        if (!$penginapan) {
+            return response()->json(['message' => "Penginapan tidak ditemukan untuk identifier: {$identifier}"], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // minimal: assign status & catatan_revisi sesuai kebutuhan
+            $penginapan->status = $data['status'];
+
+            if ($data['status'] === 'revisi') {
+                $penginapan->catatan_revisi = $data['catatan_revisi'] ?? null;
+            } else {
+                // clear revision note for non-revisi states
+                $penginapan->catatan_revisi = null;
+            }
+
+            // jika butuh logic tambahan (published_at dsb), tambahkan dengan guard try/catch jika perlu
+
+            $penginapan->save();
+
+            DB::commit();
+
+            // response JSON untuk request AJAX
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Status berhasil diperbarui.', 'status' => $penginapan->status]);
+            }
+
+            return redirect()->back()->with('success', 'Status berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            // log error lengkap -- pastikan facade Log sudah di-import
+            Log::error('updateStatus failed for penginapan', [
+                'identifier' => $identifier,
+                'request' => $request->all(),
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Gagal menyimpan status. Periksa log server untuk detail.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Gagal menyimpan status. Periksa log server.');
+        }
+    }
+
+
+    public function updateAuthor(Request $request, Penginapan $penginapan)
+    {
+        // Otorisasi hanya untuk admin
         if (!Gate::allows('admin')) {
             abort(403);
         }
 
+        // Validasi input
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['diterima', 'revisi'])],
-            'catatan_revisi' => ['nullable', 'string', 'max:1000', 'required_if:status,revisi'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $penginapan->status = $validated['status'];
-        $penginapan->catatan_revisi = $validated['catatan_revisi'] ?? null;
+        // Update author
+        $penginapan->user_id = $validated['user_id'];
         $penginapan->save();
 
-        return back()->with('success', 'Status artikel berhasil diperbarui.');
+        return back()->with('success', 'Author artikel berhasil diperbarui.');
     }
 }

@@ -101,12 +101,14 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // ... (kode di sini juga tidak perlu diubah) ...
     // User management CRUD
+    Route::post('users/destroy-multiple', [UserController::class, 'destroyMultiple'])->name('users.destroy.multiple');
     Route::resource('users', UserController::class);
 
     // --- Penginapan Routes ---
     Route::get('/', [PageController::class, 'index'])->name('home');
     Route::post('penginapan/upload-image', [PenginapanController::class, 'uploadImage'])->name('penginapan.upload.image');
     Route::post('penginapan/destroy-multiple', [PenginapanController::class, 'destroyMultiple'])->name('penginapan.destroy.multiple');
+    Route::patch('penginapan/{penginapan}/author', [PenginapanController::class, 'updateAuthor'])->name('penginapan.author.update');
     Route::patch('penginapan/{penginapan}/status', [PenginapanController::class, 'updateStatus'])->name('penginapan.status.update');
     Route::get('penginapan/gambar/{gambar}', [PenginapanController::class, 'destroyGambar'])->name('penginapan.gambar.destroy');
     Route::resource('penginapan', PenginapanController::class)
@@ -116,6 +118,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // --- Wisata Routes ---
     Route::post('wisata/destroy-multiple', [WisataController::class, 'destroyMultiple'])->name('wisata.destroy.multiple');
     Route::patch('wisata/{wisata}/status', [WisataController::class, 'updateStatus'])->name('wisata.status.update');
+    Route::patch('wisata/{wisata}/author', [WisataController::class, 'updateAuthor'])->name('wisata.author.update');
     Route::post('wisata/upload-image', [WisataController::class, 'uploadImage'])->name('wisata.upload.image');
     Route::get('wisata/gambar/{gambar}', [WisataController::class, 'destroyGambar'])->name('wisata.gambar.destroy');
     Route::resource('wisata', WisataController::class)

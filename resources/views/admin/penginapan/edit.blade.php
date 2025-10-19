@@ -127,7 +127,18 @@
                             @endforeach
                         </div>
                     </div>
-
+                                        <div class="grid grid-cols-1 gap-6 pt-6 mt-6 border-t md:grid-cols-2">
+                                            <div>
+                                                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude (Opsional)</label>
+                                                <input type="text" name="latitude" id="latitude" value="{{ old('latitude', $penginapan->latitude) }}"
+                                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm" placeholder="">
+                                            </div>
+                                            <div>
+                                                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude (Opsional)</label>
+                                                <input type="text" name="longitude" id="longitude" value="{{ old('longitude', $penginapan->longitude) }}"
+                                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm" placeholder="">
+                                            </div>
+                                        </div>
                     {{-- URL Google Maps --}}
                     <div>
                         <label for="lokasi" class="block text-xs font-medium text-gray-700">URL Google Maps
@@ -240,12 +251,28 @@
                 var deskripsiInput = document.querySelector('#deskripsi-input');
                 var form = document.querySelector('form');
 
-                // Sinkronisasi konten saat ada perubahan teks
+                // 1. Sinkronisasi saat halaman dimuat
+                deskripsiInput.value = quill.root.innerHTML;
+
+                // 2. Sinkronisasi real-time saat ada perubahan
                 quill.on('text-change', function () {
-                    deskripsiInput.value = quill.root.innerHTML;
+                    let content = quill.root.innerHTML;
+                    if (content === '<p><br></p>') {
+                        deskripsiInput.value = '';
+                    } else {
+                        deskripsiInput.value = content;
+                    }
+
+                    // Update character count
+                    if (charCount) {
+                        let length = content.length;
+                        charCount.textContent = length + ' / 5000';
+                        if (length > 5000) { charCount.classList.add('text-red-500'); }
+                        else { charCount.classList.remove('text-red-500'); }
+                    }
                 });
 
-                // Pengaman saat submit form
+                // 3. Sinkronisasi terakhir sebagai pengaman saat form disubmit
                 form.addEventListener('submit', function (e) {
                     if (quill.root.innerHTML === '<p><br></p>') {
                         deskripsiInput.value = '';

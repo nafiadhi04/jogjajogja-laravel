@@ -1,456 +1,470 @@
-<x-guest-layout>
-    {{-- Hero Section with Background Image --}}
-    <div class="relative min-h-[50vh] bg-center bg-no-repeat bg-cover"
-        style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://cdn-image.hipwee.com/wp-content/uploads/2020/07/hipwee-jenispenginapan5-768x512.jpg');">
+{{-- resources/views/admin/penginapan/index.blade.php --}}
+<x-app-layout>
+    {{-- Alpine init for table state --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('tableData', (itemsOnPage = 0) => ({
+                selectedIds: [],
+                selectAll: false,
+                itemsOnPage: Number(itemsOnPage) || 0,
+                toggleSelectAll() {
+                    this.selectAll = !this.selectAll;
+                    if (this.selectAll) {
+                        this.selectedIds = Array.from(document.querySelectorAll('.item-checkbox')).map(cb => parseInt(cb.value));
+                    } else {
+                        this.selectedIds = [];
+                    }
+                },
+                updateSelectAllState() {
+                    this.selectedIds = Array.from(new Set(this.selectedIds.map(i => parseInt(i))));
+                    this.selectAll = (this.itemsOnPage > 0) && (this.selectedIds.length === this.itemsOnPage);
+                },
+                submitMassDelete(formEl) {
+                    const count = this.selectedIds.length;
+                    if (count === 0) return;
+                    if (confirm('Anda yakin ingin menghapus ' + count + ' artikel penginapan yang dipilih?')) {
+                        formEl && formEl.submit();
+                    }
+                }
+            }));
+        });
+    </script>
 
-        {{-- Overlay for color gradient --}}
-        <div class="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-blue-500/20"></div>
+    <div class="py-6" x-data="tableData({{ $all_penginapan->count() ?? 0 }})">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-        <div class="relative flex flex-col items-center justify-center min-h-[50vh] px-4 py-8 lg:py-12">
-            {{-- Main Title --}}
-            <h1 class="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold text-center text-white">
-                Rekomendasi Penginapan
-            </h1>
+            {{-- Server-rendered route templates (use __ID__ placeholder) --}}
+            <div id="route-templates"
+                 data-penginapan-status-template="{{ url('admin/penginapan/__ID__/status') }}"
+                 data-penginapan-author-template="{{ url('admin/penginapan/__ID__/author') }}"
+                 class="hidden"></div>
 
-            {{-- Breadcrumb --}}
-            <div class="mb-6">
-                <div class="px-4 py-2 text-white bg-teal-600 rounded-lg">
-                    <span class="text-sm font-medium">Beranda > Penginapan</span>
-                </div>
-            </div>
+            <div class="p-4 bg-white rounded-md shadow-sm">
 
-            {{-- Search Form - Minimalist Version --}}
-            <div class="w-full max-w-4xl p-6 bg-white shadow-xl rounded-xl">
-                <form method="GET" action="{{ route('penginapan.list') }}" id="mainFilterForm">
-                    {{-- Main Filter Grid - Desktop: 4 columns, Mobile: Horizontal scroll --}}
-                    <div class="flex flex-row space-x-3 overflow-x-auto pb-3 lg:pb-0 lg:space-x-0 lg:grid lg:grid-cols-4 lg:gap-4">
-                        {{-- Tipe Penginapan --}}
-                        <div class="flex-shrink-0 w-40 lg:w-auto">
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Tipe Penginapan:</label>
-                            <select name="tipe" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg appearance-none bg-gray-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                <option value="">Semua Tipe</option>
-                                @foreach($all_tipes as $tipe)
-                                    <option value="{{ $tipe }}" {{ request('tipe') == $tipe ? 'selected' : '' }}>
-                                        {{ $tipe }}
-                                    </option>
-                                @endforeach
-                            </select>
+                {{-- Header --}}
+                <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
+                    <h1 class="text-lg font-semibold text-gray-800">Kelola Artikel Penginapan</h1>
+
+                    <div class="flex items-center gap-3">
+                        <div x-show="selectedIds.length > 0" x-transition>
+                            <form action="{{ route('admin.penginapan.destroy.multiple') }}" method="POST" @submit.prevent="submitMassDelete($el)">
+                                @csrf
+                                <template x-for="id in selectedIds" :key="id">
+                                    <input type="hidden" name="ids[]" :value="id">
+                                </template>
+                                <button type="submit" class="px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded hover:bg-red-700">
+                                    Hapus (<span x-text="selectedIds.length"></span>)
+                                </button>
+                            </form>
                         </div>
 
-                        {{-- Kota --}}
-                        <div class="flex-shrink-0 w-40 lg:w-auto">
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Kota:</label>
-                            <select name="kota" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg appearance-none bg-gray-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                <option value="">Semua Kota</option>
-                                @foreach($all_kotas as $kota)
-                                    <option value="{{ $kota }}" {{ request('kota') == $kota ? 'selected' : '' }}>
-                                        {{ $kota }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Periode Harga --}}
-                        <div class="flex-shrink-0 w-40 lg:w-auto">
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Periode:</label>
-                            <select name="periode" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg appearance-none bg-gray-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                <option value="">Semua Periode</option>
-                                @foreach($periode_options as $periode)
-                                    <option value="{{ $periode }}" {{ request('periode') == $periode ? 'selected' : '' }}>
-                                        {{ $periode }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Pencarian --}}
-                        <div class="flex-shrink-0 w-40 lg:w-auto">
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Pencarian:</label>
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari penginapan..."
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                        </div>
-                    </div>
-
-                    {{-- Advanced Filter Toggle --}}
-                    <div class="pt-4 mt-4 border-t">
-                        <button type="button" id="toggleAdvanced"
-                                class="flex items-center text-sm font-medium text-teal-600 hover:text-teal-700 touch-manipulation">
-                            <span>Filter Lanjutan</span>
-                            <svg class="w-4 h-4 ml-2 transition-transform transform" id="advancedArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-
-                        {{-- Advanced Filters --}}
-                        <div id="advancedFilters" class="hidden p-3 mt-3 rounded-lg bg-gray-50">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {{-- Price Range Input dengan Quick Select --}}
-                                <div class="md:col-span-3">
-                                    <label class="block mb-2 text-sm font-medium text-gray-700">Rentang Harga:</label>
-                                    
-                                    {{-- Input Manual --}}
-                                    <div class="grid grid-cols-2 gap-3 mb-3">
-                                        <div>
-                                            <label class="block mb-1 text-xs text-gray-600">Harga Minimum</label>
-                                            <input type="number" 
-                                                   name="harga_min" 
-                                                   value="{{ request('harga_min') }}" 
-                                                   placeholder="Contoh: 500000"
-                                                   min="0"
-                                                   step="50000"
-                                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                        </div>
-                                        <div>
-                                            <label class="block mb-1 text-xs text-gray-600">Harga Maksimum</label>
-                                            <input type="number" 
-                                                   name="harga_max" 
-                                                   value="{{ request('harga_max') }}" 
-                                                   placeholder="Contoh: 2000000"
-                                                   min="0"
-                                                   step="50000"
-                                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                        </div>
-                                    </div>
-
-                                    {{-- Quick Select Buttons --}}
-                                    <div class="flex flex-wrap gap-2">
-                                        <span class="text-xs text-gray-600 self-center mr-2">Cepat:</span>
-                                        <button type="button" onclick="setPrice(0, 500000)" 
-                                                class="px-3 py-1 text-xs bg-white border border-gray-300 rounded-lg hover:bg-teal-50 hover:border-teal-500 transition-colors">
-                                            &lt; 500rb
-                                        </button>
-                                        <button type="button" onclick="setPrice(500000, 1000000)" 
-                                                class="px-3 py-1 text-xs bg-white border border-gray-300 rounded-lg hover:bg-teal-50 hover:border-teal-500 transition-colors">
-                                            500rb - 1jt
-                                        </button>
-                                        <button type="button" onclick="setPrice(1000000, 2000000)" 
-                                                class="px-3 py-1 text-xs bg-white border border-gray-300 rounded-lg hover:bg-teal-50 hover:border-teal-500 transition-colors">
-                                            1jt - 2jt
-                                        </button>
-                                        <button type="button" onclick="setPrice(2000000, 5000000)" 
-                                                class="px-3 py-1 text-xs bg-white border border-gray-300 rounded-lg hover:bg-teal-50 hover:border-teal-500 transition-colors">
-                                            2jt - 5jt
-                                        </button>
-                                        <button type="button" onclick="setPrice(5000000, null)" 
-                                                class="px-3 py-1 text-xs bg-white border border-gray-300 rounded-lg hover:bg-teal-50 hover:border-teal-500 transition-colors">
-                                            &gt; 5jt
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Button Pencarian --}}
-                    <div class="flex flex-col gap-2 mt-4 md:flex-row md:justify-center md:gap-3">
-                        {{-- Tombol Pencarian --}}
-                        <button type="submit"
-                            class="flex items-center justify-center w-full md:w-auto px-6 py-2.5 font-medium text-white transition-colors duration-200 bg-orange-500 rounded-lg hover:bg-orange-600">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            Pencarian
-                        </button>
-                        
-                        {{-- Tombol Reset Filter --}}
-                        <a href="{{ route('penginapan.list') }}"
-                            class="flex items-center justify-center w-full md:w-auto px-6 py-2.5 font-medium text-white transition-colors duration-200 bg-gray-500 rounded-lg hover:bg-gray-600">
-                            Reset Filter
+                        <a href="{{ route('admin.penginapan.create') }}" class="px-3 py-1 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700">
+                            + Tambah Artikel
                         </a>
                     </div>
-                </form>
+                </div>
+
+                {{-- Search --}}
+                <div class="p-3 mb-4 rounded bg-gray-50">
+                    <form action="{{ route('admin.penginapan.index') }}" method="GET" class="grid grid-cols-1 gap-3 md:grid-cols-4">
+                        <div class="md:col-span-3">
+                            <label for="search" class="text-xs font-medium text-gray-700">Cari Artikel</label>
+                            <input type="text" name="search" id="search" value="{{ request('search') }}"
+                                   class="block w-full mt-1 text-sm border-gray-300 rounded shadow-sm"
+                                   placeholder="Ketik nama, kota, tipe, status, atau author...">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="w-full px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">Cari</button>
+                            <a href="{{ route('admin.penginapan.index') }}" class="w-full px-3 py-1 text-xs font-semibold text-center text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Reset</a>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Alerts --}}
+                @if(session('success'))
+                    <div class="px-3 py-2 mb-3 text-sm text-green-700 bg-green-100 border border-green-200 rounded" role="alert">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="px-3 py-2 mb-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded" role="alert">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- Table --}}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm border border-gray-200 table-fixed">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="w-10 px-2 py-2 text-center border">
+                                    <input type="checkbox" x-model="selectAll" @click="toggleSelectAll" class="rounded">
+                                </th>
+                                <th class="w-12 px-2 py-2 text-center border">No</th>
+                                <th class="px-3 py-2 text-left border w-28">Thumbnail</th>
+                                <th class="px-3 py-2 text-left border">Nama Artikel</th>
+                                @if(Auth::user()->role === 'admin')
+                                    <th class="px-3 py-2 text-left border w-44">Author</th>
+                                @endif
+                                <th class="w-20 px-3 py-2 text-center border">Views</th>
+                                <th class="px-3 py-2 text-left border w-28">Status</th>
+                                <th class="w-40 px-3 py-2 text-left border">Aksi</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @forelse ($all_penginapan as $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-2 py-2 text-center align-middle border">
+                                        <input type="checkbox" value="{{ $item->id }}" x-model="selectedIds" @change="updateSelectAllState()" class="rounded item-checkbox">
+                                    </td>
+
+                                    <td class="px-2 py-2 text-xs text-center align-middle border">
+                                        {{ ($all_penginapan->currentPage() - 1) * $all_penginapan->perPage() + $loop->iteration }}
+                                    </td>
+
+                                    <td class="px-3 py-2 align-middle border">
+                                        <img src="{{ asset('storage/' . $item->thumbnail) }}" alt="{{ $item->nama }}" class="object-cover w-20 h-12 rounded-sm">
+                                    </td>
+
+                                    <td class="px-3 py-2 align-top border">
+                                        @if($item->status == 'diterima')
+                                            <a href="{{ route('penginapan.detail', $item->slug) }}" target="_blank" class="text-sm font-medium text-indigo-600 hover:underline">
+                                                {{ $item->nama }}
+                                            </a>
+                                        @else
+                                            <div class="text-sm font-medium text-gray-800">{{ $item->nama }}</div>
+                                        @endif
+
+                                        @if($item->status == 'revisi' && $item->catatan_revisi)
+                                            <div class="max-w-xs px-2 py-1 mt-2 text-xs text-red-800 break-words rounded bg-red-50">
+                                                <strong>Catatan Revisi:</strong> {{ Str::limit($item->catatan_revisi, 120) }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    @if(Auth::user()->role === 'admin')
+                                        <td class="px-3 py-2 align-top border">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="flex items-center min-w-0 gap-3">
+                                                    <img src="{{ $item->author->profile_photo_path ? asset('storage/' . $item->author->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($item->author->name) . '&color=FFFFFF&background=2563EB' }}"
+                                                        alt="{{ $item->author->name }}" class="flex-shrink-0 object-cover w-8 h-8 rounded-full">
+                                                    <div class="min-w-0">
+                                                        <div class="text-sm font-medium text-gray-900 truncate">{{ $item->author->name }}</div>
+                                                        <div class="text-xs text-gray-500 truncate">{{ $item->author->email ?? '' }}</div>
+                                                    </div>
+                                                </div>
+
+                                                @php
+                                                    switch ($item->author->role) {
+                                                        case 'admin': $roleClass = 'bg-indigo-100 text-indigo-800'; break;
+                                                        case 'platinum': $roleClass = 'bg-gray-800 text-white'; break;
+                                                        case 'gold': $roleClass = 'bg-yellow-100 text-yellow-800'; break;
+                                                        case 'silver': $roleClass = 'bg-slate-100 text-slate-800'; break;
+                                                        default: $roleClass = 'bg-green-100 text-green-800';
+                                                    }
+                                                @endphp
+
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $roleClass }} flex-shrink-0 whitespace-nowrap">
+                                                    {{ ucfirst($item->author->role) }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    @endif
+
+                                    <td class="px-3 py-2 text-xs text-center align-top border">{{ $item->views }}</td>
+
+                                    <td class="px-3 py-2 align-top border">
+                                        @can('admin')
+                                            {{-- dispatch routeKey (getRouteKey) so binding works whether slug or id --}}
+                                            <button
+                                                @click="$dispatch('open-status-modal', { routeKey: '{{ $item->getRouteKey() }}', currentStatus: '{{ $item->status }}' })"
+                                                class="inline-flex items-center gap-2 px-1 py-1 text-xs rounded-sm group hover:bg-slate-50 focus:outline-none">
+                                                <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded-full
+                                                      @if($item->status == 'diterima') bg-green-100 text-green-800
+                                                      @elseif($item->status == 'verifikasi') bg-yellow-100 text-yellow-800
+                                                      @else bg-red-100 text-red-800 @endif">
+                                                    {{ ucfirst($item->status) }}
+                                                </span>
+                                                <span class="text-xs text-gray-400 group-hover:text-gray-600">ubah</span>
+                                            </button>
+                                        @else
+                                            <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded-full
+                                                  @if($item->status == 'diterima') bg-green-100 text-green-800
+                                                  @elseif($item->status == 'verifikasi') bg-yellow-100 text-yellow-800
+                                                  @else bg-red-100 text-red-800 @endif">
+                                                {{ ucfirst($item->status) }}
+                                            </span>
+                                        @endcan
+                                    </td>
+
+                                    {{-- Actions dropdown --}}
+                                    <td class="px-3 py-2 align-top border">
+                                        <div class="relative" x-data="{
+                                                open: false,
+                                                style: {},
+                                                positionMenu() {
+                                                    const btn = this.$refs.btn;
+                                                    if (!btn) return;
+                                                    const r = btn.getBoundingClientRect();
+                                                    const gap = 8;
+                                                    const MIN_W = 180;
+                                                    const CAP_W = Math.min(360, window.innerWidth - 24);
+                                                    const desiredW = Math.min(Math.max(r.width, MIN_W), CAP_W);
+
+                                                    // vertical position choose below/above
+                                                    const EST_H = 160;
+                                                    const belowSpace = window.innerHeight - r.bottom;
+                                                    const aboveSpace = r.top;
+                                                    let top;
+                                                    if (belowSpace >= EST_H + gap) {
+                                                        top = r.bottom + gap;
+                                                        this.maxH = null;
+                                                    } else if (aboveSpace >= EST_H + gap) {
+                                                        top = r.top - EST_H - gap;
+                                                        this.maxH = null;
+                                                    } else {
+                                                        if (belowSpace >= aboveSpace) {
+                                                            top = r.bottom + gap;
+                                                            this.maxH = Math.max(belowSpace - gap, 80);
+                                                        } else {
+                                                            top = Math.max(gap, r.top - Math.max(aboveSpace - gap, 80) - gap);
+                                                            this.maxH = Math.max(aboveSpace - gap, 80);
+                                                        }
+                                                    }
+
+                                                    let left = r.right - desiredW;
+                                                    left = Math.min(Math.max(left, 8), Math.max(window.innerWidth - desiredW - 8, 8));
+
+                                                    this.style = {
+                                                        position: 'fixed',
+                                                        top: Math.round(top) + 'px',
+                                                        left: Math.round(left) + 'px',
+                                                        width: Math.round(desiredW) + 'px',
+                                                        boxSizing: 'border-box',
+                                                        overflowX: 'hidden',
+                                                        whiteSpace: 'normal',
+                                                        wordBreak: 'break-word'
+                                                    };
+                                                },
+                                                openMenu() {
+                                                    this.open = !this.open;
+                                                    if (this.open) {
+                                                        this.positionMenuBound = this.positionMenu.bind(this);
+                                                        this.positionMenu();
+                                                        window.addEventListener('resize', this.positionMenuBound);
+                                                        window.addEventListener('scroll', this.positionMenuBound, true);
+                                                    } else {
+                                                        if (this.positionMenuBound) {
+                                                            window.removeEventListener('resize', this.positionMenuBound);
+                                                            window.removeEventListener('scroll', this.positionMenuBound, true);
+                                                            this.positionMenuBound = null;
+                                                        }
+                                                    }
+                                                },
+                                                closeMenu() {
+                                                    this.open = false;
+                                                    if (this.positionMenuBound) {
+                                                        window.removeEventListener('resize', this.positionMenuBound);
+                                                        window.removeEventListener('scroll', this.positionMenuBound, true);
+                                                        this.positionMenuBound = null;
+                                                    }
+                                                }
+                                            }"
+                                             @click.outside="closeMenu()"
+                                        >
+                                            <button x-ref="btn" @click="openMenu()" type="button"
+                                                    class="inline-flex items-center px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200">
+                                                <span class="material-symbols-outlined !text-base mr-1">settings</span>
+                                                <span>Pilihan</span>
+                                            </button>
+
+                                            {{-- Dropdown menu (fixed positioned) --}}
+                                            <div x-show="open" x-cloak x-transition x-ref="menu"
+                                                 :style="style"
+                                                 class="z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                                                <div class="py-1">
+                                                    @if(Auth::user()->role === 'admin' || (Auth::user()->role === 'member' && $item->status === 'revisi'))
+                                                        <a href="{{ route('admin.penginapan.edit', $item) }}" class="block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">Edit</a>
+                                                    @endif
+
+                                                    @can('admin')
+                                                        <button type="button" @click="closeMenu(); $dispatch('open-author-modal', { routeKey: '{{ $item->getRouteKey() }}' })" class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">Ganti Author</button>
+
+                                                        <button type="button" @click="closeMenu(); $dispatch('open-status-modal', { routeKey: '{{ $item->getRouteKey() }}', currentStatus: '{{ $item->status }}' })" class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">Ubah Status</button>
+                                                    @endcan
+
+                                                    <form action="{{ route('admin.penginapan.destroy', $item) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus artikel ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="w-full px-4 py-2 text-sm text-left text-red-700 hover:bg-gray-100">Hapus</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ Auth::user()->role === 'admin' ? '8' : '7' }}" class="px-4 py-12 text-center text-gray-500 border">
+                                        Tidak ada data artikel yang cocok dengan pencarian.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Pagination --}}
+                <div class="mt-4">
+                    {{ $all_penginapan->links() }}
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Results Section --}}
-    <div class="py-6 lg:py-12 bg-gray-50">
-        <div class="px-3 lg:px-6 mx-auto max-w-7xl">
+    {{-- Author Modal (server form) --}}
+    @can('admin')
+        <div x-data="{ open:false, routeKey:null, selectedAuthor:null }"
+             x-on:open-author-modal.window="open = true; routeKey = $event.detail.routeKey; selectedAuthor = null"
+             x-cloak>
+            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div x-show="open" x-transition class="fixed inset-0 bg-gray-500 bg-opacity-60"></div>
 
-            {{-- Active Filters Display --}}
-            @if(request()->hasAny(['tipe', 'kota', 'harga_min', 'harga_max', 'periode', 'fasilitas', 'search']))
-                <div class="p-3 lg:p-4 mb-4 lg:mb-6 bg-white rounded-lg shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs lg:text-sm font-medium text-gray-700">Filter Aktif:</h3>
-                        <a href="{{ route('penginapan.list') }}" class="text-xs lg:text-sm text-red-600 hover:text-red-700">Hapus Semua Filter</a>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        @if(request('tipe'))
-                            <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-blue-800 bg-blue-100 rounded-full">
-                                Tipe: {{ request('tipe') }}
-                            </span>
-                        @endif
-                        @if(request('kota'))
-                            <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-green-800 bg-green-100 rounded-full">
-                                Kota: {{ request('kota') }}
-                            </span>
-                        @endif
-                        @if(request('periode'))
-                            <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-purple-800 bg-purple-100 rounded-full">
-                                Periode: {{ request('periode') }}
-                            </span>
-                        @endif
-                        @if(request('search'))
-                            <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-yellow-800 bg-yellow-100 rounded-full">
-                                Pencarian: "{{ request('search') }}"
-                            </span>
-                        @endif
-                        @if(request('harga_min') || request('harga_max'))
-                            <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-orange-800 bg-orange-100 rounded-full">
-                                Harga: Rp {{ number_format(request('harga_min', 0)) }} - Rp {{ number_format(request('harga_max', 999999999)) }}
-                            </span>
-                        @endif
-                        @if(request('fasilitas'))
-                            @foreach((array) request('fasilitas') as $fasilitasId)
-                                @php
-                                    $fasilitas = $all_fasilitas->find($fasilitasId);
-                                @endphp
-                                @if($fasilitas)
-                                    <span class="px-2 lg:px-3 py-1 text-xs lg:text-sm text-indigo-800 bg-indigo-100 rounded-full">
-                                        {{ $fasilitas->nama }}
-                                    </span>
-                                @endif
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- Results Header --}}
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 lg:mb-8">
-                <div>
-                    <h2 class="text-lg lg:text-2xl font-bold text-gray-800">
-                        {{ $penginapan->total() }} Penginapan Ditemukan
-                        @if(request('kota'))
-                            di {{ request('kota') }}
-                        @endif
-                    </h2>
-                </div>
-                <div class="mt-3 md:mt-0">
-                    <form method="GET" action="{{ route('penginapan.list') }}" class="flex items-center space-x-2 lg:space-x-4">
-                        {{-- Preserve current filters --}}
-                        @foreach(request()->except(['sort_by']) as $key => $value)
-                            @if(is_array($value))
-                                @foreach($value as $v)
-                                    <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
-                                @endforeach
-                            @else
-                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                            @endif
-                        @endforeach
-
-                        {{-- Sort Dropdown --}}
-                        <div class="flex items-center space-x-2 text-gray-600">
-                            <span class="text-xs lg:text-sm">Sort by:</span>
+                <div x-show="open" x-transition @click.outside="open = false" class="relative w-full max-w-lg bg-white rounded-md shadow-lg">
+                    <form method="POST" :action="(() => {
+                        const tpl = document.getElementById('route-templates')?.dataset?.penginapanAuthorTemplate || '/admin/penginapan/__ID__/author';
+                        return tpl.replace('__ID__', encodeURIComponent(routeKey || ''));
+                    })()">
+                        @csrf
+                        @method('PATCH')
+                        <div class="p-4">
+                            <h3 class="text-base font-medium text-gray-900">Ganti Author</h3>
+                            <div class="mt-3">
+                                <label class="block text-xs font-medium text-gray-700">Pilih Author</label>
+                                <select x-model="selectedAuthor" name="user_id" class="block w-full mt-1 text-sm border-gray-300 rounded">
+                                    <option value="">-- Pilih Author --</option>
+                                    @foreach($authors as $a)
+                                        <option value="{{ $a['id'] }}">{{ $a['name'] }} ({{ $a['role'] ?? '-' }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
-                        <select name="sort_by" onchange="this.form.submit()"
-                                class="px-3 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-base bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 appearance-none pr-8">
-                            <option value="created_at" {{ request('sort_by', 'created_at') == 'created_at' ? 'selected' : '' }}>Terbaru</option>
-                            <option value="harga" {{ request('sort_by') == 'harga' ? 'selected' : '' }}>Termurah</option>
-                            <option value="nama" {{ request('sort_by') == 'nama' ? 'selected' : '' }}>Abjad (A-Z)</option>
-                            <option value="views" {{ request('sort_by') == 'views' ? 'selected' : '' }}>Rekomendasi</option>
-                        </select>
+                        <div class="flex justify-end px-4 py-3 space-x-2 bg-gray-50">
+                            <button type="button" @click="open=false" class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button>
+                            <button :disabled="!selectedAuthor" type="submit" class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">Simpan</button>
+                        </div>
                     </form>
                 </div>
             </div>
-            
-            {{-- Grid Penginapan --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                @forelse ($penginapan as $index => $item)
-                    <div class="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group">
-
-                        <div class="relative overflow-hidden h-64 md:h-40 sm:h-48">
-                            <a href="{{ route('penginapan.detail', $item->slug) }}">
-                                @if($item->thumbnail)
-                                    <img src="{{ asset('storage/' . $item->thumbnail) }}" alt="{{ $item->nama }}"
-                                         class="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105">
-                                @else
-                                    <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                                        <svg class="w-12 h-12 lg:w-16 lg:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                @endif
-                            </a>
-
-                            {{-- Rekomendasi Badge --}}
-                            @if($index < 8)
-                                <div class="absolute top-2 left-2 lg:top-4 lg:left-4">
-                                    <div class="flex items-center px-2 lg:px-3 py-1 text-xs lg:text-sm font-medium text-white bg-orange-500 rounded-lg">
-                                        <svg class="w-3 h-3 lg:w-4 lg:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                        </svg>
-                                        Rekomendasi
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- Content --}}
-                        <div class="p-4 lg:p-6">
-                            {{-- Title --}}
-                            <h3 class="mb-2 lg:mb-3 text-base lg:text-xl font-bold text-gray-800 line-clamp-2 transition-colors group-hover:text-teal-600">
-                                <a href="{{ route('penginapan.detail', $item) }}">{{ $item->nama }}</a>
-                            </h3>
-                            {{-- Location --}}
-                            <div class="flex items-center mb-1.5 lg:mb-2 text-gray-600">
-                                <svg class="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span class="text-xs lg:text-sm">{{ $item->kota }}</span>
-                            </div>
-
-                            {{-- Type --}}
-                            <div class="flex items-center mb-3 lg:mb-2 text-gray-600">
-                                <svg class="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                </svg>
-                                <span class="text-xs lg:text-sm">{{ $item->tipe }}</span>
-                            </div>
-
-                            {{-- Price & Views Container --}}
-                            <div class="flex items-center justify-between">
-                                {{-- Price dengan potongan miring --}}
-                                <div class="px-3 lg:px-4 py-1.5 lg:py-2 text-white bg-teal-600 clip-slant">
-                                    <div class="flex flex-col leading-tight">
-                                        <span class="text-[10px] lg:text-sm">Harian</span>
-                                        <span class="text-base lg:text-xl font-bold">
-                                            Rp{{ number_format($item->harga, 0, ',', '.') }}
-                                        </span>
-                                    </div>
-                                </div>
-                                {{-- Views (kanan) --}}
-                                <div class="flex items-center pr-2 lg:pr-3 space-x-1 text-xs lg:text-sm font-medium text-gray-700">
-                                    <svg class="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                    <span>{{ $item->views }}</span>
-                                </div>
-                            </div>
-
-                            {{-- Rating --}}
-                            @if($item->rating > 0)
-                                <div class="flex items-center mb-2 text-gray-600 mt-2">
-                                    <div class="flex items-center">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            <svg class="w-3 h-3 lg:w-4 lg:h-4 {{ $i <= $item->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                            </svg>
-                                        @endfor
-                                        <span class="ml-2 text-xs lg:text-sm">({{ $item->rating }})</span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @empty
-                    <div class="py-12 text-center col-span-full">
-                        <div class="mb-6">
-                            <svg class="w-12 h-12 lg:w-16 lg:h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="mb-2 text-lg lg:text-xl font-semibold text-gray-700">Tidak ada penginapan ditemukan</h3>
-                        <p class="mb-4 text-sm lg:text-base text-gray-500">Coba ubah filter pencarian atau hapus beberapa kriteria</p>
-                        <a href="{{ route('penginapan.list') }}"
-                           class="px-6 py-2 text-sm lg:text-base text-white transition-colors bg-teal-600 rounded-lg hover:bg-teal-700">
-                            Lihat Semua Penginapan
-                        </a>
-                    </div>
-                @endforelse
-            </div>
-
-            {{-- Pagination --}}
-            @if($penginapan->hasPages())
-                <div class="flex justify-center mt-8 lg:mt-12">
-                    {{ $penginapan->appends(request()->query())->links() }}
-                </div>
-            @endif
         </div>
-    </div>
+    @endcan
 
-    {{-- Custom CSS --}}
-    <style>
-        /* Custom Select Arrow */
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-        }
+    {{-- Status Modal (AJAX PATCH using routeKey) --}}
+    @can('admin')
+        <div x-data="{
+                open:false,
+                routeKey:null,
+                status:null,
+                loading:false,
+                error:null,
+                openFor(event) {
+                    this.routeKey = event.detail.routeKey;
+                    this.status = event.detail.currentStatus ?? null;
+                    this.error = null;
+                    this.open = true;
+                },
+                buildUrl() {
+                    const tpl = document.getElementById('route-templates')?.dataset?.penginapanStatusTemplate || '/admin/penginapan/__ID__/status';
+                    return tpl.replace('__ID__', encodeURIComponent(this.routeKey || ''));
+                },
+                async submitStatus() {
+                    if (!this.routeKey || !this.status) {
+                        this.error = 'Item atau status tidak valid.';
+                        return;
+                    }
+                    this.loading = true;
+                    this.error = null;
 
-        /* Style custom untuk efek potongan miring */
-        .clip-slant {
-            clip-path: polygon(0 0, 90% 0, 100% 100%, 0% 100%);
-            border-bottom-left-radius: 0.5rem;
-        }
+                    const token = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+                    const url = this.buildUrl();
+                    const body = { status: this.status };
+                    if (this.status === 'revisi') body.catatan_revisi = this.$refs.catatan ? this.$refs.catatan.value : '';
 
-        /* Hover effect for cards */
-        .group:hover .group-hover\:scale-105 {
-            transform: scale(1.05);
-        }
+                    try {
+                        const res = await fetch(url, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': token,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(body)
+                        });
 
-        /* Line clamp untuk title */
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+                        console.log('PATCH', url, '=>', res.status);
 
-        /* Touch manipulation untuk better mobile response */
-        .touch-manipulation {
-            touch-action: manipulation;
-        }
+                        if (!res.ok) {
+                            const txt = await res.text();
+                            console.error('Response body:', txt);
+                            this.error = `Gagal (HTTP ${res.status}).`;
+                            this.loading = false;
+                            return;
+                        }
 
-        /* Smooth transitions */
-        * {
-            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 150ms;
-        }
-    </style>
+                        this.loading = false;
+                        this.open = false;
+                        // refresh to show updated status
+                        window.location.reload();
+                    } catch (e) {
+                        console.error(e);
+                        this.error = 'Terjadi error jaringan.';
+                        this.loading = false;
+                    }
+                }
+            }"
+             x-on:open-status-modal.window="openFor($event)"
+             x-cloak>
+            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div x-show="open" x-transition class="fixed inset-0 bg-gray-500 bg-opacity-60"></div>
 
-    {{-- JavaScript untuk Advanced Filter Toggle --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Advanced Filter Toggle
-            const toggleBtn = document.getElementById('toggleAdvanced');
-            const advancedFilters = document.getElementById('advancedFilters');
-            const arrow = document.getElementById('advancedArrow');
+                <div x-show="open" x-transition @click.outside="open = false" class="relative w-full max-w-md bg-white rounded-md shadow-lg">
+                    <div class="p-4">
+                        <h3 class="text-base font-medium text-gray-900">Ubah Status</h3>
 
-            if (toggleBtn && advancedFilters && arrow) {
-                toggleBtn.addEventListener('click', function() {
-                    advancedFilters.classList.toggle('hidden');
-                    arrow.classList.toggle('rotate-180');
-                });
-            }
+                        <div class="mt-3 space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Status Baru</label>
+                                <select x-model="status" class="block w-full mt-1 text-sm border-gray-300 rounded" required>
+                                    <option value="diterima">Diterima</option>
+                                    <option value="verifikasi">Verifikasi</option>
+                                    <option value="revisi">Revisi</option>
+                                </select>
+                            </div>
 
-            // Auto-show advanced filters if price filters are active
-            const hargaMin = "{{ request('harga_min') }}";
-            const hargaMax = "{{ request('harga_max') }}";
-            
-            if ((hargaMin || hargaMax) && advancedFilters && arrow) {
-                advancedFilters.classList.remove('hidden');
-                arrow.classList.add('rotate-180');
-            }
-        });
+                            <div x-show="status === 'revisi'">
+                                <label class="block text-xs font-medium text-gray-700">Catatan Revisi</label>
+                                <textarea x-ref="catatan" rows="3" class="block w-full mt-1 text-sm border-gray-300 rounded"></textarea>
+                            </div>
 
-        // Function untuk quick select price range
-        function setPrice(min, max) {
-            const minInput = document.querySelector('input[name="harga_min"]');
-            const maxInput = document.querySelector('input[name="harga_max"]');
-            
-            if (minInput) minInput.value = min || '';
-            if (maxInput) maxInput.value = max || '';
-        }
-    </script>
-</x-guest-layout>
+                            <template x-if="error">
+                                <div class="p-2 text-sm text-red-700 bg-red-100 rounded" x-text="error"></div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end px-4 py-3 space-x-2 bg-gray-50">
+                        <button type="button" @click="open=false" class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button>
+                        <button type="button" @click="submitStatus()" :disabled="loading" class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">
+                            <span x-show="!loading">Simpan</span>
+                            <span x-show="loading">Menyimpan...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
+
+</x-app-layout>

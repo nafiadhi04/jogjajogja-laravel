@@ -111,6 +111,18 @@
                     </div>
 
                     {{-- Lokasi Google Maps --}}
+                                        <div class="grid grid-cols-1 gap-6 pt-6 mt-6 border-t md:grid-cols-2">
+                                            <div>
+                                                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude (Opsional)</label>
+                                                <input type="text" name="latitude" id="latitude" value="{{ old('latitude') }}"
+                                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm" placeholder="-7.1234567">
+                                            </div>
+                                            <div>
+                                                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude (Opsional)</label>
+                                                <input type="text" name="longitude" id="longitude" value="{{ old('longitude') }}"
+                                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm" placeholder="110.1234567">
+                                            </div>
+                                        </div>
                     <div>
                         <label for="lokasi" class="block text-xs font-medium text-gray-700">URL Google Maps
                             (Opsional)</label>

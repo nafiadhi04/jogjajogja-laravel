@@ -53,5 +53,16 @@ class Wisata extends Model
     {
         return $this->belongsToMany(Fasilitas::class, 'fasilitas_wisata');
     }
+
+    public function getViewableMapUrlAttribute(): string
+    {
+        // Jika latitude dan longitude ada di database, buat URL dari sana
+        if ($this->latitude && $this->longitude) {
+            return "https://www.google.com/maps/search/?api=1&query={$this->latitude},{$this->longitude}";
+        }
+
+        // Jika tidak ada, kembalikan '#' sebagai fallback agar tidak error
+        return '#';
+    }
 }
 
