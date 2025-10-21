@@ -49,7 +49,7 @@ class WisataController extends Controller
 
         $authors = User::whereIn('role', ['admin', 'member', 'silver', 'gold', 'platinum'])->orderBy('name')->get();
 
-        return view('admin.wisata.index', compact('all_wisata', 'authors'));
+        return view('admin.wisata.index.index', compact('all_wisata', 'authors'));
     }
 
     /**
@@ -71,7 +71,7 @@ class WisataController extends Controller
         }
 
         $fasilitas = Fasilitas::all();
-        return view('admin.wisata.create', compact('fasilitas'));
+        return view('admin.wisata.create.index', compact('fasilitas'));
     }
 
     /**
@@ -133,7 +133,7 @@ class WisataController extends Controller
         $user = Auth::user();
         if ($user->role === 'admin' || $wisata->user_id === $user->id) {
             $fasilitas = Fasilitas::all();
-            return view('admin.wisata.edit', compact('wisata', 'fasilitas'));
+            return view('admin.wisata.edit.index', compact('wisata', 'fasilitas'));
         }
         abort(403, 'AKSI TIDAK DIIZINKAN.');
     }

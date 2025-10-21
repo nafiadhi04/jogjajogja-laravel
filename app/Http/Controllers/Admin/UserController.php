@@ -29,7 +29,8 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(10)->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index.index', compact('users'));
+
     }
 
     /**
@@ -37,7 +38,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        return view('admin.users.create.index');
     }
 
     /**
@@ -67,7 +68,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        return view('admin.users.edit.index', compact('user'));
     }
 
     /**

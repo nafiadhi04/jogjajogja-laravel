@@ -55,7 +55,7 @@ class PenginapanController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.penginapan.index', compact('all_penginapan', 'authors'));
+        return view('admin.penginapan.index.index', compact('all_penginapan', 'authors'));
     }
 
     /**
@@ -86,7 +86,7 @@ class PenginapanController extends Controller
             $fasilitas = collect([]);
         }
 
-        return view('admin.penginapan.create', compact('fasilitas'));
+        return view('admin.penginapan.create.index', compact('fasilitas'));
     }
 
     /**
@@ -103,7 +103,7 @@ class PenginapanController extends Controller
             'harga' => ['required', 'numeric', 'min:0'],
             'periode_harga' => ['required', 'string'],
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
-            'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+            'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
             'thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],
@@ -150,7 +150,7 @@ class PenginapanController extends Controller
         $user = Auth::user();
         if ($user->role === 'admin' || $penginapan->user_id === $user->id) {
             $fasilitas = Fasilitas::all();
-            return view('admin.penginapan.edit', compact('penginapan', 'fasilitas'));
+            return view('admin.penginapan.edit.index', compact('penginapan', 'fasilitas'));
         }
         abort(403, 'AKSI TIDAK DIIZINKAN.');
     }
@@ -173,7 +173,7 @@ class PenginapanController extends Controller
             'harga' => ['required', 'numeric', 'min:0'],
             'periode_harga' => ['required', 'string'],
             'tipe' => ['required', 'string', Rule::in(['Villa', 'Hotel', 'Guest House', 'Homestay', 'Losmen'])],
-            'kota' => ['required', 'string', Rule::in(['Kota Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
+            'kota' => ['required', 'string', Rule::in(['Yogyakarta', 'Sleman', 'Bantul', 'Gunungkidul', 'Kulon Progo'])],
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:20480'],
             'fasilitas' => ['nullable', 'array'],
             'fasilitas.*' => ['exists:fasilitas,id'],

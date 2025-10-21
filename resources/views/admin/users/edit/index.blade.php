@@ -1,3 +1,4 @@
+{{-- resources/views/admin/users/edit/index.blade.php --}}
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
@@ -63,7 +64,7 @@
                     {{-- Password baru (optional) --}}
                     <div class="relative">
                         <label for="password" class="block text-sm font-medium text-gray-700">Password Baru</label>
-                        <div class="mt-1 relative">
+                        <div class="relative mt-1">
                             <input :type="showPassword ? 'text' : 'password'" name="password" id="password"
                                 class="block w-full pr-10 text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Kosongkan bila tidak ingin mengubah password" autocomplete="new-password">
@@ -71,7 +72,6 @@
                                 aria-label="Toggle password visibility"
                                 class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 transition opacity-80 hover:opacity-100"
                                 title="Tampilkan / sembunyikan password">
-                                <!-- simple eye icon (SVG) -->
                                 <svg x-show="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -94,7 +94,7 @@
                     <div class="relative">
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Konfirmasi
                             Password Baru</label>
-                        <div class="mt-1 relative">
+                        <div class="relative mt-1">
                             <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation"
                                 id="password_confirmation"
                                 class="block w-full pr-10 text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -123,7 +123,7 @@
                     </div>
 
                     {{-- Buttons --}}
-                    <div class="flex justify-end pt-4 gap-3">
+                    <div class="flex justify-end gap-3 pt-4">
                         <a href="{{ route('admin.users.index') }}"
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
                             Batal
@@ -138,4 +138,7 @@
             </div>
         </div>
     </div>
+
+    {{-- include the small scripts partial (keamanan & aksesibilitas keyboard handling) --}}
+    @include('admin.users.edit._scripts')
 </x-app-layout>

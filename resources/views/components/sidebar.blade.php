@@ -1,7 +1,7 @@
 @props(['user'])
 
-<aside :class="open ? 'w-64' : 'w-20'"
-    class="flex flex-col flex-shrink-0 overflow-hidden text-gray-300 transition-all duration-500 ease-in-out shadow-xl bg-slate-800 transform-gpu"
+<aside :class="open ? 'w-64' : 'w-20' "
+    class="flex flex-col flex-shrink-0 overflow-hidden transition-all duration-500 ease-in-out shadow-xl te-xt-gray-300 bg-slate-800 transform-gpu"
     x-cloak style="will-change: width, transform, opacity;">
 
     {{-- Header Sidebar dengan Logo --}}

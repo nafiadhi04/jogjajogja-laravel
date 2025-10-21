@@ -25,9 +25,10 @@
 
     <div x-data="{ open: window.innerWidth > 1024 }" class="flex min-h-screen bg-gray-100">
 
-        {{-- 1. Komponen Sidebar (yang berisi logonya sendiri) --}}
+        {{-- Sidebar --}}
         <x-sidebar :user="$user" />
-        {{-- 2. Area Konten Utama --}}
+
+        {{-- Main content area --}}
         <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
             <div class="flex flex-col flex-1">
                 <main class="flex-1 overflow-y-auto bg-white">
@@ -35,7 +36,7 @@
                     {{-- Header Konten dengan Tombol Toggle --}}
                     <div class="flex items-center justify-between p-1 border-b h-14 border-slate-700 bg-slate-800">
                         {{-- Tombol Toggle --}}
-                        <button @click="open = !open" class="w-10 h-10 text-gray-400 rounded-md 0 hover:bg-teal-400">
+                        <button @click="open = !open" class="w-10 h-10 text-gray-400 rounded-md hover:bg-teal-400">
                             <span class="material-symbols-outlined">menu</span>
                         </button>
 
@@ -45,14 +46,8 @@
                                 <x-slot name="trigger">
                                     <button
                                         class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white transition duration-150 ease-in-out border border-transparent rounded-md bg-slate-800 hover:text-gray-200 focus:outline-none">
-
-                                        {{-- ========================================================== --}}
-                                        {{-- PERBAIKAN: Gambar profil diganti dengan ikon --}}
-                                        {{-- ========================================================== --}}
-                                        <span class="mr-2 text-2xl text-gray-400 material-symbols-outlined">
-                                            person
-                                        </span>
-
+                                        <span
+                                            class="mr-2 text-2xl text-gray-400 material-symbols-outlined">person</span>
                                         <div class="text-xs">{{ Auth::user()->name }}</div>
                                         <div class="ms-1">
                                             <svg class="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +66,7 @@
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();
-                                                                this.closest('form').submit();">
+                                                                 this.closest('form').submit();">
                                             {{ __('Log Out') }}
                                         </x-dropdown-link>
                                     </form>
@@ -80,7 +75,7 @@
                         </div>
                     </div>
 
-                    {{-- Slot untuk konten utama dari setiap halaman --}}
+                    {{-- Slot utama halaman --}}
                     <div class="p-4">
                         {{ $slot }}
                     </div>
