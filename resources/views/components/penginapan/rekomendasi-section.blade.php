@@ -1,6 +1,6 @@
 {{-- Section Rekomendasi Penginapan --}}
 <div class="py-12 bg-white">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {{-- Header dan Tombol LIHAT SEMUA untuk Desktop --}}
         <div class="hidden md:flex items-center justify-between mb-8">
             <div>
@@ -13,7 +13,7 @@
         </div>
 
         {{-- Header dan Tombol LIHAT SEMUA untuk Mobile --}}
-        <div class="md:hidden mb-6 px-4 sm:px-0">
+        <div class="md:hidden mb-6 sm:px-0">
             <p class="text-base font-medium text-teal-600">Rekomendasi Penginapan</p>
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-2xl font-bold text-gray-900">Penginapan Pilihan Di Jogja</h2>
@@ -43,7 +43,7 @@
                     clickThreshold: 15,
                     verticalThreshold: 20,
                     dragStarted: false,
-                    transitionEnabled: true, // Kontrol transisi untuk smooth loop
+                    transitionEnabled: true,
 
                     init() {
                         this.updateResponsive();
@@ -52,15 +52,14 @@
 
                     updateResponsive() {
                         const width = window.innerWidth;
-                        if (width < 640) {
+                        if (width < 768) { 
                             this.itemsPerSlide = 1;
-                        } else if (width < 768) {
-                            this.itemsPerSlide = 2;
                         } else if (width < 1024) {
                             this.itemsPerSlide = 3;
                         } else {
                             this.itemsPerSlide = 4;
                         }
+
                         this.maxSlide = Math.max(0, Math.ceil(this.totalItems / this.itemsPerSlide)); 
                         this.currentSlide = Math.min(Math.max(1, this.currentSlide), this.maxSlide);
                         this.updateContainerWidth();
@@ -131,7 +130,6 @@
                             }
                         }
 
-                        // JIKA TIDAK CUKUP GESER, KEMBALI KE SLIDE SAAT INI (BOUNCE BACK)
                         if (newSlide === this.currentSlide && this.dragStarted) {
                              this.goToSlide(this.currentSlide);
                         } else {
@@ -149,23 +147,19 @@
                     goToSlide(index) {
                         this.transitionEnabled = true;
                         
-                        // Batas Atas dan Bawah (indeks duplikasi)
                         if (index === 0) {
                             this.currentSlide = 0;
-                            // Pindah ke slide ASLI terakhir setelah transisi selesai
                             setTimeout(() => {
                                 this.transitionEnabled = false;
                                 this.currentSlide = this.maxSlide;
-                            }, 500); 
+                            }, window.innerWidth < 768 ? 300 : 500); 
                         } else if (index === this.maxSlide + 1) {
                             this.currentSlide = this.maxSlide + 1;
-                            // Pindah ke slide ASLI pertama setelah transisi selesai
                             setTimeout(() => {
                                 this.transitionEnabled = false;
                                 this.currentSlide = 1;
-                            }, 500); 
+                            }, window.innerWidth < 768 ? 300 : 500); 
                         } else {
-                             // Perpindahan slide normal
                              this.currentSlide = index;
                         }
                     },
@@ -179,7 +173,6 @@
                     },
 
                     getTransform() {
-                        // Perhitungan transform yang menggabungkan posisi slide dan offset drag
                         return -this.currentSlide * 100 + (this.dragStarted && this.isDragging ? (this.dragOffset / this.containerWidth) * 100 : 0);
                     },
 
@@ -191,27 +184,30 @@
                 class="relative"
             >
                 
-                {{-- Tombol Navigasi --}}
+                {{-- Tombol Navigasi PREV (Disesuaikan Posisi Desktop) --}}
                 <button 
                     @click="prevSlide()"
                     x-show="maxSlide > 0"
-                    class="absolute left-2 sm:left-0 z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-white transition-all duration-200 transform -translate-y-1/2 bg-black rounded-full bg-opacity-60 top-1/2 hover:bg-opacity-80 hover:scale-110">
+                    {{-- PERUBAHAN KRUSIAL: sm:left-[-1rem] untuk menarik tombol keluar di desktop --}}
+                    class="absolute -left-2 sm:left-[-1rem] z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-teal-600 transition-all duration-200 transform -translate-y-1/2 bg-gray-200 rounded-full shadow-lg top-1/2 hover:scale-110 active:bg-teal-600 active:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
                 
+                {{-- Tombol Navigasi NEXT (Disesuaikan Posisi Desktop) --}}
                 <button 
                     @click="nextSlide()"
                     x-show="maxSlide > 0"
-                    class="absolute right-2 sm:right-0 z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-white transition-all duration-200 transform -translate-y-1/2 bg-black rounded-full bg-opacity-60 top-1/2 hover:bg-opacity-80 hover:scale-110">
+                    {{-- PERUBAHAN KRUSIAL: sm:right-[-1rem] untuk menarik tombol keluar di desktop --}}
+                    class="absolute -right-2 sm:right-[-1rem] z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-teal-600 transition-all duration-200 transform -translate-y-1/2 bg-gray-200 rounded-full shadow-lg top-1/2 hover:scale-110 active:bg-teal-600 active:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
 
                 {{-- Kontainer Kartu --}}
-                <div class="overflow-hidden select-none px-4 sm:px-0 group"
+                <div class="overflow-hidden select-none sm:px-0 group"
                     x-ref="container"
                     :class="{ 'cursor-grabbing': dragStarted, 'cursor-grab': !dragStarted }"
                     @mousedown="startDrag($event)"
@@ -233,7 +229,6 @@
                             
                             {{-- DUPLIKASI SLIDE TERAKHIR --}}
                             @php
-                                // Mengambil hingga 4 item terakhir untuk duplikasi (safe max)
                                 $lastItems = $penginapanRekomendasi->reverse()->take(4)->reverse();
                             @endphp
                             @foreach($lastItems as $penginapan)
@@ -255,7 +250,6 @@
 
                             {{-- DUPLIKASI SLIDE PERTAMA --}}
                             @php
-                                // Mengambil hingga 4 item pertama untuk duplikasi (safe max)
                                 $firstItems = $penginapanRekomendasi->take(4);
                             @endphp
                             @foreach($firstItems as $penginapan)
@@ -275,7 +269,6 @@
                     <template x-for="i in maxSlide" :key="i">
                         <button 
                             @click="goToSlide(i)"
-                            {{-- Indikator menyesuaikan indeks slide ASLI (1 hingga maxSlide) --}}
                             :class="{ 'bg-teal-600 scale-110': currentSlide === i, 'bg-gray-300': currentSlide !== i }"
                             class="w-3 h-3 transition-all duration-300 rounded-full hover:bg-teal-500 hover:scale-105">
                         </button>

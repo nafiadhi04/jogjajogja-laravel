@@ -1,17 +1,32 @@
 <x-guest-layout>
+    
+    {{-- Definisi Variabel Lokal (Mengatasi Potensi Undefined Variable Error) --}}
+    @php
+        $berandaRoute = route('beranda'); 
+        $wisataListRoute = route('wisata.list');
+        // Asumsi $all_tipes dan $all_kotas dilewatkan dari Controller
+    @endphp
+
     {{-- Hero Section dengan Background Image --}}
     <div class="relative bg-center bg-no-repeat bg-cover"
-        style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://asset.kompas.com/crops/Y5S_hd-Jn2cuaKYtOfN4ASXnM2Y=/0x0:1000x667/1200x800/data/photo/2022/03/13/622e12c85befb.jpg');">
+        {{-- MODIFIKASI: Gunakan gradient dari hitam pekat (0.7) di atas ke transparan (0) di bawah. --}}
+        style="background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.0) 70%), url('https://asset.kompas.com/crops/Y5S_hd-Jn2cuaKYtOfN4ASXnM2Y=/0x0:1000x667/1200x800/data/photo/2022/03/13/622e12c85befb.jpg');">
 
-        <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-green-500/20"></div>
+        {{-- Hapus lapisan cyan/green agar efek gelap lebih murni dan dramatis --}}
+        {{-- <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-green-500/20"></div> --}}
 
         <div class="relative flex flex-col items-center justify-center min-h-[60vh] px-4">
             <h1 class="mb-8 text-4xl font-bold text-center text-white md:text-6xl">
                 Jelajahi Pesona Wisata
             </h1>
+            
+            {{-- Breadcrumb (PERBAIKAN: Menjadikan Beranda Aktif) --}}
             <div class="mb-12">
                 <div class="px-6 py-3 text-white rounded-lg bg-cyan-600">
-                    <span class="text-lg font-medium">Beranda > Wisata</span>
+                    <span class="text-lg font-medium">
+                        <a href="{{ $berandaRoute }}" class="hover:text-cyan-200 transition duration-150">Beranda</a> 
+                        > Wisata
+                    </span>
                 </div>
             </div>
         </div>
@@ -20,16 +35,19 @@
     {{-- Search & Filter Section --}}
     <div class="relative z-10 max-w-5xl py-12 mx-4 -mt-24 bg-white shadow-2xl md:mx-auto rounded-2xl">
         <div class="px-8">
-            <form method="GET" action="{{ route('wisata.list') }}" class="grid grid-cols-1 gap-6 md:grid-cols-4">
+            <form method="GET" action="{{ $wisataListRoute }}" class="grid grid-cols-1 gap-6 md:grid-cols-4">
                 {{-- Tipe Wisata --}}
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-700">Tipe Wisata:</label>
                     <select name="tipe"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none bg-gray-50 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                         <option value="">Semua Tipe</option>
-                        {{-- Data ini perlu dikirim dari PageController --}}
-                        {{-- @foreach($all_tipes as $tipe) <option value="{{ $tipe }}"
-                            @selected(request('tipe')==$tipe)>{{ $tipe }}</option> @endforeach --}}
+                        {{-- Pastikan $all_tipes dilewatkan dari controller --}}
+                        @if(isset($all_tipes))
+                            @foreach($all_tipes as $tipe) 
+                                <option value="{{ $tipe }}" @selected(request('tipe') == $tipe)>{{ $tipe }}</option> 
+                            @endforeach
+                        @endif
                     </select>
                 </div>
 
@@ -39,9 +57,12 @@
                     <select name="kota"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none bg-gray-50 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                         <option value="">Semua Kota</option>
-                        {{-- Data ini perlu dikirim dari PageController --}}
-                        {{-- @foreach($all_kotas as $kota) <option value="{{ $kota }}"
-                            @selected(request('kota')==$kota)>{{ $kota }}</option> @endforeach --}}
+                        {{-- Pastikan $all_kotas dilewatkan dari controller --}}
+                        @if(isset($all_kotas))
+                            @foreach($all_kotas as $kota) 
+                                <option value="{{ $kota }}" @selected(request('kota') == $kota)>{{ $kota }}</option> 
+                            @endforeach
+                        @endif
                     </select>
                 </div>
 
@@ -68,7 +89,7 @@
                         </svg>
                         Pencarian
                     </button>
-                    <a href="{{ route('wisata.list') }}"
+                    <a href="{{ $wisataListRoute }}"
                         class="px-6 py-3 font-medium text-white transition-colors duration-200 bg-gray-500 rounded-lg hover:bg-gray-600">
                         Reset Filter
                     </a>
@@ -84,21 +105,23 @@
             <div class="flex flex-col mb-8 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">
+                        {{-- Menggunakan $wisatas->total() --}}
                         @isset($wisatas) {{ $wisatas->total() }} Wisata Ditemukan @else 0 Wisata Ditemukan @endisset
                     </h2>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <form method="GET" action="{{ route('wisata.list') }}" class="flex items-center space-x-4">
+                    <form method="GET" action="{{ $wisataListRoute }}" class="flex items-center space-x-4">
                         @foreach(request()->except(['sort_by']) as $key => $value)
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endforeach
                         <span class="text-gray-600">Urutkan:</span>
                         <select name="sort_by" onchange="this.form.submit()"
                             class="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
-                            <option value="created_at" @selected(request('sort_by', 'created_at') == 'created_at')>Terbaru
-                            </option>
+                            <option value="created_at" @selected(request('sort_by', 'created_at') == 'created_at')>Terbaru</option>
                             <option value="harga_tiket" @selected(request('sort_by') == 'harga_tiket')>Termurah</option>
                             <option value="nama" @selected(request('sort_by') == 'nama')>Nama A-Z</option>
+                            {{-- Menambahkan opsi views/rekomendasi --}}
+                            <option value="views" @selected(request('sort_by') == 'views')>Rekomendasi</option>
                         </select>
                     </form>
                 </div>
@@ -140,6 +163,7 @@
                                     <span class="text-sm">{{ $item->kota }}</span>
                                 </div>
                                 <div class="flex items-center mb-4 text-gray-600">
+                                    {{-- Catatan: Ikon ini menggunakan 'material-symbols-outlined', pastikan di-load di layout Anda --}}
                                     <span class="mr-2 text-base material-symbols-outlined">category</span>
                                     <span class="text-sm">{{ $item->tipe }}</span>
                                 </div>
@@ -158,18 +182,74 @@
                         <div class="py-12 text-center col-span-full">
                             <h3 class="mb-2 text-xl font-semibold text-gray-700">Tidak ada tempat wisata ditemukan</h3>
                             <p class="mb-4 text-gray-500">Coba ubah filter pencarian Anda.</p>
+                            <a href="{{ $wisataListRoute }}"
+                               class="px-6 py-2 text-sm lg:text-base text-white transition-colors bg-cyan-600 rounded-lg hover:bg-cyan-700">
+                                Reset Filter
+                            </a>
                         </div>
                     @endforelse
                 @endisset
             </div>
 
-            @isset($wisatas)
-                @if($wisatas->hasPages())
-                    <div class="flex justify-center mt-12">
-                        {{ $wisatas->appends(request()->query())->links() }}
-                    </div>
-                @endif
-            @endisset
+            {{-- Pagination --}}
+            @if (isset($wisatas) && $wisatas->hasPages())
+                <div class="flex justify-center mt-8 lg:mt-12">
+                    <nav role="navigation" aria-label="Pagination" class="flex items-center space-x-1 md:space-x-2">
+
+                        @if ($wisatas->onFirstPage())
+                            <span class="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base text-gray-500 rounded-lg cursor-not-allowed">
+                                Sebelumnya
+                            </span>
+                        @else
+                            <a href="{{ $wisatas->previousPageUrl() }}" rel="prev" 
+                               class="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base text-gray-800 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                Sebelumnya
+                            </a>
+                        @endif
+
+                        {{-- Links kustom untuk halaman --}}
+                        <div class="flex items-center space-x-1 md:space-x-2">
+                            @foreach ($wisatas->links()->elements as $element)
+                                @if (is_array($element))
+                                    @foreach ($element as $page => $url)
+                                        @if ($page == $wisatas->currentPage())
+                                            <span class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-base font-semibold text-white bg-cyan-600 rounded-lg shadow-md">
+                                                {{ $page }}
+                                            </span>
+                                        @else
+                                            <a href="{{ $url }}" 
+                                               class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-base font-medium text-gray-800 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                                {{ $page }}
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                @endif
+
+                                @if (is_string($element))
+                                    <span class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-base text-gray-500 font-medium">
+                                        {{ $element }}
+                                    </span>
+                                @endif
+                            @endforeach
+                        </div>
+
+                        @if ($wisatas->hasMorePages())
+                            <a href="{{ $wisatas->nextPageUrl() }}" rel="next" 
+                               class="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base text-gray-800 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                Selanjutnya
+                            </a>
+                        @else
+                            <span class="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base text-gray-500 bg-gray-50 rounded-lg cursor-not-allowed">
+                                Selanjutnya
+                            </span>
+                        @endif
+
+                    </nav>
+                </div>
+            @endif
         </div>
     </div>
+    
+    {{-- MENGHAPUS BLOK PAGINATION GANDA YANG TIDAK PERLU DI SINI --}}
+
 </x-guest-layout>

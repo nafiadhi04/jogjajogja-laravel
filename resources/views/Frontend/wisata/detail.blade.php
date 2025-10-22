@@ -2,9 +2,7 @@
     {{-- Menitipkan style khusus untuk halaman ini ke layout utama --}}
     @push('styles')
         <style>
-            /* Aturan CSS ini akan memaksa perataan teks dari Quill
-             * untuk diterapkan, bahkan jika bertentangan dengan style 'prose'.
-             */
+            /* Aturan CSS ini akan memaksa perataan teks dari Quill */
             .prose .ql-align-center {
                 text-align: center;
             }
@@ -19,18 +17,14 @@
 
             /* ============================================
              * PERBAIKAN UTAMA: Mengatur ulang Margin Paragraf di Blok PROSE
-             * Ini akan mengatasi jarak antar paragraf yang terlalu lebar.
              * ============================================ */
             .prose p {
-                /* PAKSA MARGIN MENJADI NOL agar perataan horizontal di dalam satu paragraf tetap rapat */
                 margin-top: 0 !important; 
                 margin-bottom: 0 !important; 
-                /* Mengatur jarak baris agar teks terlihat wajar, ini menjadi pemisah utama antar baris */
                 line-height: 1.6; 
             }
 
-            /* Menghilangkan margin pada paragraf pertama di blok prose untuk mencegah spasi ganda
-               dengan elemen di atasnya, seperti H3 di tentang-section */
+            /* Menghilangkan margin pada paragraf pertama di blok prose */
             .prose p + p {
                 margin-top: 0 !important;
             }
@@ -40,86 +34,78 @@
                 margin-top: 0 !important;
             }
 
-            /* ... (CSS di atasnya: .gallery-section, .main-image-container default, .thumbnail-gallery default) ... */
+            /* 💡 BARU: Kontainer Gambar Utama (Main Image) */
+            .main-image-container-wrapper {
+                width: 100%;
+                overflow: hidden;
+            }
 
-/* 💡 BARU: Kontainer Gambar Utama (Main Image) */
-.main-image-container-wrapper {
-    width: 100%;
-    overflow: hidden;
-}
-
-.main-image-container {
-    width: 100%;
-    /* Rasio 16:9 di mobile/default */
-    aspect-ratio: 16 / 9; 
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-/* ... (CSS untuk .thumbnail-item, .thumbnail-item img, dll.) ... */
-
-
-/* ---------------------------------------------------- */
-/* MEDIA QUERY: DESKTOP (md: 768px ke atas) */
-/* ---------------------------------------------------- */
-@media (min-width: 768px) {
-    /* Hapus flex-direction: row. Tetap COLUMN untuk tampilan Single-Column. */
-    .gallery-container {
-        flex-direction: column; 
-    }
-    
-    .main-image-container-wrapper {
-        /* Tetap 100% lebar */
-        width: 100%; 
-    }
-
-    .main-image-container {
-        /* 💡 PENYESUAIAN: Kunci rasio 16/9, dan setel min-height yang optimal */
-        aspect-ratio: 16 / 9; 
-        min-height: 400px; /* Minimal tinggi yang pas untuk desktop */
-    }
-
-    .thumbnail-gallery {
-        /* Thumbnail kembali ke tata letak grid, BUKAN sidebar */
-        width: 100%;
-        padding: 1rem 0; /* Sesuaikan padding */
-        
-        /* 💡 PERUBAHAN: Gunakan 6 kolom untuk thumbnail di desktop */
-        grid-template-columns: repeat(6, 1fr); 
-        gap: 0.5rem;
-        
-        /* Hapus properti sidebar */
-        overflow-x: auto;
-        overflow-y: hidden; 
-        margin-left: 0;
-        height: auto;
-    }
-}
+            .main-image-container {
+                width: 100%;
+                /* Rasio 16:9 di mobile/default */
+                aspect-ratio: 16 / 9; 
+                overflow: hidden;
+                flex-shrink: 0;
+            }
+            
+            /* --- GALLERY MOBILE SLIDER FIX --- */
+            .gallery-section .main-image-carousel {
+                margin-left: 0;
+                margin-right: 0;
+            }
+            /* --- END GALLERY MOBILE SLIDER FIX --- */
 
 
-/* ---------------------------------------------------- */
-/* MEDIA QUERY: DESKTOP BESAR (lg: 1000px ke atas) */
-/* ---------------------------------------------------- */
-@media (min-width: 1000px) {
-    .main-image-container-wrapper {
-        width: 100%;
-    }
-    
-    .main-image-container {
-        /* 💡 PERUBAHAN: Sesuaikan min-height agar tidak terlalu besar */
-        /* min-height 500px terlihat wajar di layar lebar */
-        min-height: 500px; 
-        aspect-ratio: 16 / 9;
-    }
-    
-    .thumbnail-gallery {
-        width: 100%;
-        /* 💡 PERUBAHAN: Gunakan 8 kolom agar thumbnail lebih kecil dan banyak */
-        grid-template-columns: repeat(8, 1fr);
-    }
-}
+            /* ---------------------------------------------------- */
+            /* MEDIA QUERY: DESKTOP (md: 768px ke atas) */
+            /* ---------------------------------------------------- */
+            @media (min-width: 768px) {
+                .gallery-container {
+                    flex-direction: column; 
+                }
+                
+                .main-image-container-wrapper {
+                    width: 100%; 
+                }
+
+                .main-image-container {
+                    aspect-ratio: 16 / 9; 
+                    min-height: 400px;
+                }
+
+                .thumbnail-gallery {
+                    width: 100%;
+                    padding: 1rem 0;
+                    grid-template-columns: repeat(6, 1fr); 
+                    gap: 0.5rem;
+                    overflow-x: auto;
+                    overflow-y: hidden; 
+                    margin-left: 0;
+                    height: auto;
+                }
+            }
+
+
+            /* ---------------------------------------------------- */
+            /* MEDIA QUERY: DESKTOP BESAR (lg: 1000px ke atas) */
+            /* ---------------------------------------------------- */
+            @media (min-width: 1000px) {
+                .main-image-container-wrapper {
+                    width: 100%;
+                }
+                
+                .main-image-container {
+                    min-height: 500px; 
+                    aspect-ratio: 16 / 9;
+                }
+                
+                .thumbnail-gallery {
+                    width: 100%;
+                    grid-template-columns: repeat(8, 1fr);
+                }
+            }
             /* ============================================
-             * SECTION: TENTANG (DESKRIPSI)
+             * SECTION: TENTANG (DESKRIPSI) & ALAMAT
              * ============================================ */
             .tentang-section {
                 background-color: white;
@@ -129,8 +115,9 @@
                 margin-bottom: 2rem;
             }
 
+            /* >>>>>> PENYESUAIAN JUDUL SECTION MOBILE/DESKTOP <<<<<< */
             .tentang-section h3 {
-                font-size: 1.875rem;
+                font-size: 1.5rem; /* text-2xl mobile */
                 font-weight: 700;
                 color: #1f2937;
                 margin-bottom: 1.5rem;
@@ -138,22 +125,25 @@
                 align-items: center;
                 gap: 0.5rem;
             }
+            
+            @media (min-width: 768px) {
+                .tentang-section h3 {
+                    font-size: 1.875rem; /* text-3xl desktop */
+                }
+            }
+            /* >>>>>> END PENYESUAIAN JUDUL SECTION <<<<<< */
+
 
             .tentang-section .prose {
                 line-height: 1.75;
                 color: #374151;
             }
             
-            /* CATATAN: Margin pada .tentang-section .prose p dihapus/diperbaiki di atas pada .prose p */
-
             .tentang-section .prose strong {
                 font-weight: 600;
                 color: #1f2937;
             }
 
-            /* ============================================
-             * SECTION: ALAMAT & PETA
-             * ============================================ */
             .alamat-section {
                 background-color: white;
                 border-radius: 0.5rem;
@@ -163,13 +153,19 @@
             }
 
             .alamat-section h3 {
-                font-size: 1.875rem;
+                font-size: 1.5rem; /* text-2xl mobile */
                 font-weight: 700;
                 color: #1f2937;
                 margin-bottom: 1.5rem;
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
+            }
+
+            @media (min-width: 768px) {
+                .alamat-section h3 {
+                    font-size: 1.875rem; /* text-3xl desktop */
+                }
             }
 
             .alamat-text {
@@ -238,108 +234,47 @@
                 color: #1f2937;
             }
 
-            .spot-strategis {
-                background: white;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                margin-top: 2rem;
-            }
-
-            .spot-item {
-                display: flex;
-                justify-content: space-between;
+            /* >>>>>> PENYESUAIAN HEADER INFO (KOTA, TIPE, VIEW) <<<<<< */
+            .header-info-wrapper {
+                display: flex; 
+                flex-wrap: wrap; 
                 align-items: center;
-                padding: 0.75rem 0;
-                border-bottom: 1px solid #f3f4f6;
-                text-decoration: none;
-                color: #374151;
-                transition: background-color 0.2s;
+                gap: 0.75rem; 
+                margin-top: 0.75rem;
+                font-size: 0.875rem; 
+                color: #6b7280; 
             }
 
-            .spot-item:last-child {
-                border-bottom: none;
-            }
-
-            .spot-item:hover {
-                background-color: #f9fafb;
-                border-radius: 0.25rem;
-            }
-
-            .spot-distance {
-                background-color: #0d9488;
-                color: white;
-                padding: 0.25rem 0.75rem;
-                border-radius: 1rem;
-                font-size: 0.75rem;
-                font-weight: 500;
-            }
-
-            .whatsapp-btn {
-                background-color: #25d366;
-                color: white;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.5rem;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-weight: 600;
-                transition: background-color 0.2s;
-                width: 100%;
-                justify-content: center;
-                margin-top: 1rem;
-            }
-
-            .whatsapp-btn:hover {
-                background-color: #22c55e;
-                color: white;
-            }
-
-            .breadcrumb {
+            .header-info-item {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                margin-bottom: 1.5rem;
-                font-size: 0.875rem;
-                color: #6b7280;
+                gap: 0.25rem; 
             }
 
-            .breadcrumb a {
-                color: #0d9488;
-                text-decoration: none;
-            }
-
-            .breadcrumb a:hover {
-                text-decoration: underline;
-            }
-
-            .header-info {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                margin-top: 0.5rem;
-                font-size: 0.875rem;
-                color: #6b7280;
-            }
-
-            .header-info span {
-                display: flex;
-                align-items: center;
-                gap: 0.25rem;
+            .header-info-item .icon {
+                color: #0d9488; 
+                width: 1.25rem; 
+                height: 1.25rem;
             }
 
             .villa-badge {
-                background-color: #f3f4f6;
+                /* Kelas ini dipertahankan, namun gaya disesuaikan */
+                background-color: #e0f2f7; 
+                color: #0d9488; 
                 padding: 0.25rem 0.75rem;
                 border-radius: 0.25rem;
                 font-size: 0.75rem;
                 font-weight: 500;
             }
 
-            /* ============================================
-             * SECTION: INFORMASI PEMESANAN
-             * ============================================ */
+            @media (max-width: 767px) {
+                .header-info-wrapper {
+                    justify-content: center; 
+                    gap: 0.5rem; 
+                }
+            }
+            /* >>>>>> END PENYESUAIAN HEADER INFO <<<<<< */
+
             .booking-section {
                 background-color: white;
                 border-radius: 0.5rem;
@@ -423,8 +358,9 @@
         </style>
     @endpush
 
-    <div class="py-8 bg-gray-50">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <div class="pt-24 pb-8 bg-gray-50">
+        {{-- PERUBAHAN: Tambahkan 'px-4' untuk padding di mobile pada wrapper utama --}}
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8"> 
             {{-- Breadcrumb --}}
             <div class="breadcrumb">
                 <a href="{{ route('home') }}">Home</a>
@@ -436,17 +372,27 @@
 
             {{-- Header Wisata --}}
             <div class="mb-6">
-                <h1 class="text-4xl font-extrabold tracking-tight text-gray-900">{{ $wisata->nama }}</h1>
-                <div class="flex flex-wrap items-center space-x-8 md:flex-nowrap">
-                    <p class="mt-2 text-3xl font-bold text-teal-600">
-                        Rp {{ number_format($wisata->harga, 0, ',', '.') }}
+                {{-- >>>>>> PENYESUAIAN JUDUL UTAMA MOBILE/DESKTOP <<<<<< --}}
+                <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">{{ $wisata->nama }}</h1>
+                <div class="flex flex-wrap items-center mt-2 gap-x-6 gap-y-2"> 
+                    <p class="text-3xl font-bold text-teal-600">
+                        Rp {{ number_format($wisata->harga_tiket, 0, ',', '.') }}
                         <span class="text-lg font-normal text-gray-600">/ {{ $wisata->periode_harga }}</span>
                     </p>
-                    <div class="header-info">
-                        <span>📍 {{ $wisata->kota }}</span>
+                    
+                    {{-- >>>>>> BAGIAN INFO KOTA, TIPE, VIEW YANG DISESUAIKAN <<<<<< --}}
+                    <div class="header-info-wrapper">
+                        <span class="header-info-item">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0L6.343 16.657a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            {{ $wisata->kota }}
+                        </span>
                         <span class="villa-badge">{{ $wisata->tipe }}</span>
-                        <span>👁️ {{ $wisata->views }} View</span>
+                        <span class="header-info-item">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            {{ $wisata->views }} View
+                        </span>
                     </div>
+                    {{-- >>>>>> END BAGIAN INFO <<<<<< --}}
                 </div>
             </div>
 
@@ -455,17 +401,17 @@
                 <div class="lg:col-span-3">
                     
                     {{-- =============================================== 
-                        SECTION 1: GALLERY (TERPISAH)
-                        =============================================== --}}
+                         SECTION 1: GALLERY (TERPISAH)
+                         =============================================== --}}
                     <section class="gallery-section">
                         <div class="gallery-container">
-                            <x-wisata.gallery :wisata="$wisata" />
+                            <x-wisata.gallery :wisata="$wisata" /> 
                         </div>
                     </section>
 
                     {{-- =============================================== 
-                        SECTION 2: TABEL HARGA
-                        =============================================== --}}
+                         SECTION 2: TABEL HARGA
+                         =============================================== --}}
                     @if(isset($wisata->harga_weekend) || isset($wisata->harga_high_season))
                     <div class="p-6 mb-8 overflow-x-auto bg-white rounded-lg shadow-sm">
                         <table class="min-w-full price-table">
@@ -478,7 +424,7 @@
                             <tbody>
                                 <tr>
                                     <td>Weekdays</td>
-                                    <td>Rp{{ number_format($wisata->harga, 0, ',', '.') }}</td>
+                                    <td>Rp{{ number_format($wisata->harga_tiket, 0, ',', '.') }}</td>
                                 </tr>
                                 @if(isset($wisata->harga_weekend))
                                 <tr>
@@ -507,8 +453,8 @@
                     @endif
 
                     {{-- =============================================== 
-                        SECTION 3: TENTANG/DESKRIPSI (TERPISAH)
-                        =============================================== --}}
+                         SECTION 3: TENTANG/DESKRIPSI (TERPISAH)
+                         =============================================== --}}
                     <section class="tentang-section">
                         <h3>
                             <span class="text-teal-600">🏠</span> Tentang {{ $wisata->nama }}
@@ -519,8 +465,8 @@
                     </section>
 
                     {{-- =============================================== 
-                        SECTION 4: FASILITAS
-                        =============================================== --}}
+                         SECTION 4: FASILITAS
+                         =============================================== --}}
                     <div class="p-6 mb-8 bg-white rounded-lg shadow-sm">
                         <h3 class="mb-4 text-2xl font-bold text-gray-800">
                             <span class="text-teal-600">🏨</span> Fasilitas
@@ -538,8 +484,8 @@
                     </div>
 
                     {{-- =============================================== 
-                        SECTION 5: INFORMASI PEMESANAN
-                        =============================================== --}}
+                         SECTION 5: INFORMASI PEMESANAN
+                         =============================================== --}}
                     <section class="booking-section">
                         <h3>
                             <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -567,8 +513,8 @@
                     </section>
 
                     {{-- =============================================== 
-                        SECTION 6: ALAMAT & PETA 
-                        =============================================== --}}
+                         SECTION 6: ALAMAT & PETA 
+                         =============================================== --}}
                     <section class="alamat-section">
                         <h3>
                             <span class="text-teal-600">📍</span> Alamat
@@ -596,7 +542,7 @@
                 {{-- Sidebar --}}
                 <x-wisata.sidebar 
                     :penginapan="$penginapan"
-                    :penginapan-rekomendasi="$penginapan_rekomendasi" 
+                    :penginapan-rekomendasi="$penginapanRekomendasi" 
                 />
             </div>
         </div>
