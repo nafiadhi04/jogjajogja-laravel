@@ -21,6 +21,7 @@ use App\Http\Controllers\HomeController;
 
 // Perbaikan: Ubah rute home agar memanggil PageController@index
 Route::get('/', [PageController::class, 'index'])->name('home');
+Route::get('/beranda', [PageController::class, 'beranda'])->name('beranda');
 
 // Route untuk Penginapan
 Route::get('/penginapan', [PageController::class, 'listPenginapan'])->name('penginapan.list');

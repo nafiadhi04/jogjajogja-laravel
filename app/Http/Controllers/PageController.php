@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
+    public function beranda()
+{
+    // Untuk saat ini, kita tampilkan view kosong dulu
+    // Nanti bisa ditambahkan data yang diperlukan
+    return view('frontend.beranda');
+}
     /**
      * Tampilkan halaman utama/home dengan rekomendasi penginapan
      */
@@ -207,30 +213,27 @@ class PageController extends Controller
             ->limit(4)
             ->get();
 
-        // 1. Ambil salah satu data penginapan terkait/terdekat (Misalnya yang paling populer)
-        // Kita gunakan kota yang sama dan ambil yang paling banyak dilihat.
+        // 1. Ambil salah satu data penginapan untuk info author di sidebar
         $penginapan_terkait = Penginapan::where('status', 'diterima')
             ->where('kota', $wisata->kota)
-            ->with(['author']) // Eager load author untuk info di sidebar
+            ->with(['author'])
             ->orderByDesc('views')
-            ->first(); // Ambil hanya satu data
+            ->first();
 
-        // 2. Ambil data penginapan rekomendasi (untuk blok rekomendasi di sidebar)
-        $penginapan_rekomendasi = Penginapan::where('status', 'diterima')
-            ->where('is_rekomendasi', true)
-            ->has('gambar')
-            ->with(['gambar'])
-            ->inRandomOrder()
-            ->limit(4)
-            ->get();
-
+        // Alternatif: Ambil penginapan populer jika tidak ada rekomendasi
+$penginapan_rekomendasi = Penginapan::where('status', 'diterima')
+    ->has('gambar')
+    ->with(['gambar', 'author'])
+    ->orderByDesc('views')
+    ->limit(4)
+    ->get();
 
         return view('frontend.wisata.detail', [
             'wisata' => $wisata,
             'wisata_terkait' => $wisata_terkait,
             // Variabel untuk sidebar
             'penginapan' => $penginapan_terkait,
-            'penginapan_rekomendasi' => $penginapan_rekomendasi,
+            'penginapanRekomendasi' => $penginapan_rekomendasi, // Ubah nama variabel agar sesuai dengan props component
         ]);
     }
 }

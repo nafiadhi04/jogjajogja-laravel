@@ -1,11 +1,11 @@
 {{-- Section Rekomendasi wisata --}}
 <div class="py-12 bg-white">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {{-- Header dan Tombol LIHAT SEMUA untuk Desktop --}}
         <div class="hidden md:flex items-center justify-between mb-8">
             <div>
-                <p class="text-lg font-medium text-teal-600">Rekomendasi wisata</p>
-                <h2 class="text-3xl font-bold text-gray-900">wisata Pilihan Di Jogja</h2>
+                <p class="text-lg font-medium text-teal-600">Rekomendasi Wisata</p>
+                <h2 class="text-3xl font-bold text-gray-900">Wisata Pilihan Di Jogja</h2>
             </div>
             <a href="{{ route('wisata.list') }}" class="px-6 py-2 text-white transition bg-teal-600 rounded-lg hover:bg-teal-700">
                 LIHAT SEMUA →
@@ -14,9 +14,9 @@
 
         {{-- Header dan Tombol LIHAT SEMUA untuk Mobile --}}
         <div class="md:hidden mb-6 px-4 sm:px-0">
-            <p class="text-base font-medium text-teal-600">Rekomendasi wisata</p>
+            <p class="text-base font-medium text-teal-600">Rekomendasi Wisata</p>
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-gray-900">wisata Pilihan Di Jogja</h2>
+                <h2 class="text-2xl font-bold text-gray-900">Wisata Pilihan Di Jogja</h2>
                 <a href="{{ route('wisata.list') }}" class="px-4 py-2 text-white transition bg-teal-600 rounded-lg text-sm hover:bg-teal-700">
                     LIHAT SEMUA →
                 </a>
@@ -27,8 +27,6 @@
         @if(isset($wisataRekomendasi) && $wisataRekomendasi->count() > 0)
             <div 
                 x-data="{
-                    // 💡 PERUBAHAN: maxSlide tidak lagi digunakan sebagai batasan, 
-                    // namun tetap perlu untuk indikator slide.
                     currentSlide: 0,
                     itemsPerSlide: 1,
                     totalItems: {{ $wisataRekomendasi->count() }},
@@ -45,7 +43,7 @@
                     clickThreshold: 15,
                     verticalThreshold: 20,
                     dragStarted: false,
-
+                    
                     init() {
                         this.updateResponsive();
                         window.addEventListener('resize', () => this.updateResponsive());
@@ -53,19 +51,19 @@
 
                     updateResponsive() {
                         const width = window.innerWidth;
-                        if (width < 640) {
+                        // Logika itemsPerSlide sesuai preferensi 1 item di mobile
+                        if (width < 768) { 
                             this.itemsPerSlide = 1;
-                        } else if (width < 768) {
-                            this.itemsPerSlide = 2;
                         } else if (width < 1024) {
                             this.itemsPerSlide = 3;
                         } else {
                             this.itemsPerSlide = 4;
                         }
-                        // maxSlide dihitung sebagai total halaman, meski tidak digunakan sebagai batasan pergeseran
+                        
+                        // maxSlide = Total halaman yang bisa digeser (index 0 hingga maxSlide)
                         this.maxSlide = Math.max(0, Math.ceil(this.totalItems / this.itemsPerSlide) - 1);
-                        // 💡 PERBAIKAN: Jaga currentSlide agar tetap berada dalam batas 0 hingga maxSlide
-                        // agar indikator slide berfungsi, tapi logika navigasi next/prev/drag akan menanganinya
+                        
+                        // Sesuaikan currentSlide agar tidak melebihi batas (untuk indikator)
                         if (this.currentSlide > this.maxSlide) {
                             this.currentSlide = this.maxSlide;
                         }
@@ -115,13 +113,6 @@
                         if (this.dragStarted) {
                             e.preventDefault();
                             this.dragOffset = deltaX;
-                            // 💡 PERUBAHAN: Hapus logika 'resistance' agar geseran tetap penuh
-                            // let resistance = 1;
-                            // if ((this.currentSlide === 0 && this.dragOffset > 0) || 
-                            //     (this.currentSlide === this.maxSlide && this.dragOffset < 0)) {
-                            //     resistance = 0.3;
-                            // }
-                            // this.dragOffset *= resistance;
                         }
                     },
 
@@ -136,10 +127,10 @@
                         
                         if (this.dragStarted && Math.abs(this.dragOffset) > this.threshold) {
                             if (this.dragOffset > 0) {
-                                // 💡 PERUBAHAN: Modulo untuk perulangan 'prev'
+                                // Modulo untuk perulangan 'prev'
                                 this.currentSlide = (this.currentSlide - 1 + (this.maxSlide + 1)) % (this.maxSlide + 1);
                             } else if (this.dragOffset < 0) {
-                                // 💡 PERUBAHAN: Modulo untuk perulangan 'next'
+                                // Modulo untuk perulangan 'next'
                                 this.currentSlide = (this.currentSlide + 1) % (this.maxSlide + 1);
                             }
                         }
@@ -165,12 +156,12 @@
                     },
 
                     nextSlide() {
-                        // 💡 PERUBAHAN: Logika perulangan (carousel loop)
+                        // Logika perulangan (carousel loop)
                         this.currentSlide = (this.currentSlide + 1) % (this.maxSlide + 1);
                     },
 
                     prevSlide() {
-                        // 💡 PERUBAHAN: Logika perulangan (carousel loop)
+                        // Logika perulangan (carousel loop)
                         this.currentSlide = (this.currentSlide - 1 + (this.maxSlide + 1)) % (this.maxSlide + 1);
                     },
 
@@ -181,31 +172,30 @@
                 class="relative"
             >
                 
-                {{-- Tombol Navigasi --}}
+                {{-- Tombol Navigasi PREV (LATAR BELAKANG ABU-ABU & Posisi Desktop) --}}
                 <button 
                     @click="prevSlide()"
                     x-show="maxSlide > 0"
-                    {{-- 💡 PERUBAHAN: Hapus kelas batasan, sekarang selalu aktif --}}
-                    {{-- :class="{ 'opacity-50 cursor-not-allowed': currentSlide === 0 }" --}}
-                    class="absolute left-2 sm:left-0 z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-white transition-all duration-200 transform -translate-y-1/2 bg-black rounded-full bg-opacity-60 top-1/2 hover:bg-opacity-80 hover:scale-110">
+                    {{-- 💡 PERUBAHAN POSISI DESKTOP: sm:left-[-1rem] --}}
+                    class="absolute -left-2 sm:left-[-1rem] z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-teal-600 transition-all duration-200 transform -translate-y-1/2 bg-gray-200 rounded-full shadow-lg top-1/2 hover:scale-110 active:bg-teal-600 active:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
                 
+                {{-- Tombol Navigasi NEXT (LATAR BELAKANG ABU-ABU & Posisi Desktop) --}}
                 <button 
                     @click="nextSlide()"
                     x-show="maxSlide > 0"
-                    {{-- 💡 PERUBAHAN: Hapus kelas batasan, sekarang selalu aktif --}}
-                    {{-- :class="{ 'opacity-50 cursor-not-allowed': currentSlide === maxSlide }" --}}
-                    class="absolute right-2 sm:right-0 z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-white transition-all duration-200 transform -translate-y-1/2 bg-black rounded-full bg-opacity-60 top-1/2 hover:bg-opacity-80 hover:scale-110">
+                    {{-- 💡 PERUBAHAN POSISI DESKTOP: sm:right-[-1rem] --}}
+                    class="absolute -right-2 sm:right-[-1rem] z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-teal-600 transition-all duration-200 transform -translate-y-1/2 bg-gray-200 rounded-full shadow-lg top-1/2 hover:scale-110 active:bg-teal-600 active:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
 
                 {{-- Kontainer Kartu --}}
-                <div class="overflow-hidden select-none px-4 sm:px-0 group"
+                <div class="overflow-hidden select-none sm:px-0 group"
                     x-ref="container"
                     :class="{ 'cursor-grabbing': dragStarted }"
                     @mousedown="startDrag($event)"
@@ -228,6 +218,7 @@
                                 <div class="flex-shrink-0 px-2 sm:px-3 cursor-default"
                                     :style="{ width: getItemWidth() }"
                                     style="pointer-events: auto;">
+                                    {{-- Asumsi Anda memiliki komponen wisata.card --}}
                                     <x-wisata.card 
                                         :wisata="$wisata" 
                                         :prevent-drag="true" 
@@ -243,7 +234,7 @@
                     <template x-for="i in (maxSlide + 1)" :key="i">
                         <button 
                             @click="goToSlide(i - 1)"
-                            {{-- 💡 PERUBAHAN: Gunakan currentSlide % (maxSlide + 1) untuk memastikan indeks indikator yang aktif selalu benar --}}
+                            {{-- Modulo pada currentSlide untuk perulangan --}}
                             :class="{ 'bg-teal-600 scale-110': (currentSlide % (maxSlide + 1)) === (i - 1), 'bg-gray-300': (currentSlide % (maxSlide + 1)) !== (i - 1) }"
                             class="w-3 h-3 transition-all duration-300 rounded-full hover:bg-teal-500 hover:scale-105">
                         </button>

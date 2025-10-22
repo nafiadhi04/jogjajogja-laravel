@@ -42,7 +42,7 @@
                     <input type="text" 
                     name="search" 
                     value="{{ request('search') }}" 
-                    placeholder="Cari penginapan..." 
+                    placeholder="Cari wisata..." 
                     class="flex-1 px-3 py-2 border border-r-0 rounded-l focus:outline-none focus:border-teal-500">
                     <button class="px-4 py-2 text-white bg-teal-600 rounded-r hover:bg-teal-700">
                         🔍
